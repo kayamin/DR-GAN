@@ -11,7 +11,7 @@ from torch.autograd import Variable
 from util.Is_D_strong import Is_D_strong
 
 
-def train(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
+def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
     if args.cuda:
         D_model.cuda()
         G_model.cuda()
@@ -41,28 +41,30 @@ def train(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
             end = start + args.batch_size
             batch_image = torch.FloatTensor(images[start:end])
             batch_id_label = torch.LongTensor(id_labels[start:end])
+            batch_id_label_unique = torch.LongTensor(batch_id_label[::args.images_perID])
+
             batch_pose_label = torch.LongTensor(pose_labels[start:end])
-            minibatch_size = len(batch_image)
-            syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size).astype(int))
+            minibatch_size_unique = len(batch_image) // args.images_perID
+            syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size_unique).astype(int))
 
             # ノイズと姿勢コードを生成
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
-            pose_code = np.zeros((minibatch_size, Np))
-            tmp  = np.random.randint(Np, size=minibatch_size)
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
+            pose_code = np.zeros((minibatch_size_unique, Np))
+            tmp  = np.random.randint(Np, size=minibatch_size_unique)
             pose_code[:, tmp] = 1
             pose_code = torch.FloatTensor(pose_code) # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
 
             if args.cuda:
-                batch_image, batch_id_label, batch_pose_label, syn_id_label = \
-                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), syn_id_label.cuda()
+                batch_image, batch_id_label, batch_id_label_unique, batch_pose_label, syn_id_label = \
+                    batch_image.cuda(), batch_id_label.cuda(), batch_id_label_unique.cuda(), batch_pose_label.cuda(), syn_id_label.cuda()
 
                 fixed_noise, pose_code, pose_code_label = \
                     fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda()
 
-            batch_image, batch_id_label, batch_pose_label, syn_id_label = \
-                Variable(batch_image), Variable(batch_id_label), Variable(batch_pose_label), Variable(syn_id_label)
+            batch_image, batch_id_label, batch_id_label_unique, batch_pose_label, syn_id_label = \
+                Variable(batch_image), Variable(batch_id_label), Variable(batch_id_label_unique), Variable(batch_pose_label), Variable(syn_id_label)
 
             fixed_noise, pose_code, pose_code_label = \
                 Variable(fixed_noise), Variable(pose_code), Variable(pose_code_label)
@@ -90,14 +92,14 @@ def train(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
                     print("EPOCH : {0}, step : {1}, D : {2}".format(epoch, steps, d_loss.data[0]))
 
                     # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd, minibatch_size)
+                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
 
                 else:
                     # Generatorの学習
                     syn_output=D_model(generated)
 
                     # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) +\
+                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label_unique) +\
                         loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     optimizer_G.step()
@@ -120,14 +122,14 @@ def train(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
                     print("EPOCH : {0}, step : {1}, D : {2}".format(epoch, steps, d_loss.data[0]))
 
                     # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd, minibatch_size)
+                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
 
                 else:
                     # Generatorの学習
                     syn_output=D_model(generated)
 
                     # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) +\
+                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label_unique) +\
                         loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     optimizer_G.step()
@@ -139,7 +141,7 @@ def train(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
         if not os.path.isdir(args.save_dir): os.makedirs(args.save_dir)
         save_path_D = os.path.join(args.save_dir,'epoch{}_D.pt'.format(epoch))
         torch.save(D_model, save_path_D)
-        save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))   
+        save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
         torch.save(G_model, save_path_G)
 
     # 学習終了後に，全エポックでのロスの変化を画像として保存

@@ -11,7 +11,8 @@ from torch.autograd import Variable
 from model import single_DR_GAN_model as single_model
 from model import multiple_DR_GAN_model as multi_model
 from util.create_randomdata import create_randomdata
-from train import train
+from train_single_DRGAN import train_single_DRGAN
+from train_multiple_DRGAN import train_multiple_DRGAN
 from Generate_Image import Generate_Image
 import pdb
 
@@ -41,15 +42,11 @@ def DataLoader():
 
 if __name__=="__main__":
 
-    # argparse を用いてコマンドライン引数を解析
     parser = argparse.ArgumentParser(description='DR_GAN')
     # learning
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
-    parser.add_argument('-epochs', type=int, default=256, help='number of epochs for train [default: 256]')
-    parser.add_argument('-batch_size', type=int, default=3, help='batch size for training [default: 64]')
-    parser.add_argument('-log-interval',  type=int, default=1,   help='how many steps to wait before logging training status [default: 1]')
-    parser.add_argument('-test-interval', type=int, default=100, help='how many steps to wait before testing [default: 100]')
-    parser.add_argument('-save-interval', type=int, default=500, help='how many steps to wait before saving [default:500]')
+    parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 256]')
+    parser.add_argument('-batch_size', type=int, default=8, help='batch size for training [default: 64]')
     parser.add_argument('-save-dir', type=str, default='snapshot', help='where to save the snapshot')
     # data
     parser.add_argument('-random', action='store_true', default=False, help='shuffle the data every epoch')
@@ -60,7 +57,7 @@ if __name__=="__main__":
     # option
     parser.add_argument('-snapshot', type=str, default=None, help='filename of model snapshot(snaphsot/{date}/{epoch}) [default: None]')
     parser.add_argument('-generate', action='store_true', default=None, help='Generate pose modified image from given image')
-    parser.add_argument('-test', action='store_true', default=False, help='train or test')
+
     args = parser.parse_args()
 
     # update args and print
@@ -87,7 +84,7 @@ if __name__=="__main__":
                 exit()
             else:
                 D = multi_model.Discriminator(Nd, Np, channel_num)
-                G = multi_model.Generator(Np, Nz, channle_num, args.images_perID)
+                G = multi_model.Generator(Np, Nz, channel_num, args.images_perID)
     else:
         print('\nLoading model from [%s]...' % args.snapshot)
         try:
@@ -98,7 +95,14 @@ if __name__=="__main__":
             exit()
 
     if not(args.generate):
-        train(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
+        if not(args.multi_DRGAN):
+            train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
+        else:
+            if (images.shape[0] % args.batch_size == 0) and (args.batch_size % args.images_perID == 0):
+                train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
+            else:
+                print("Please give valid combination of data_size, batch_size, images_perID")
+                exit()
     else:
         pose_code = [] # specify arbitrary pose code for every image
         # pose_code = np.random.uniform(-1,1, (images.shape[0], Np))

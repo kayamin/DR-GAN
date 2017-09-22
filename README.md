@@ -9,5 +9,5 @@
 - pytohon 3.6
 - pytorch 0.2.0
 - numpy 1.13.1
-
-
+- scipy 0.18.1
+- matplotlib 2.0.0

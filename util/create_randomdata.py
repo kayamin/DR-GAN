@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-def create_randomdata(data_size=50, channel_num=3, Nd=200, Np=9):
+def create_randomdata(data_size=64, channel_num=3, Nd=200, Np=9):
     """
     Create random data
 

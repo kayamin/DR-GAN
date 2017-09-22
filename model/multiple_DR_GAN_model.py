@@ -4,6 +4,7 @@
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
+import pdb
 
 
 class Discriminator(nn.Module):
@@ -303,6 +304,7 @@ class Generator(nn.Module):
         x = x.squeeze(2)
 
         self.features = x
+        
         x = torch.cat([x, pose, noise], 1)  # nBx320 -> nB x (320+Np+Nz)
 
         x = self.G_dec_fc(x) # B x (320+Np+Nz) -> B x (320x6x6)
