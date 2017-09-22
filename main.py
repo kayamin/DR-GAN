@@ -27,7 +27,7 @@ def DataLoader():
     pose_labels : one-hot vetor with Np dimension
     Nd : the nuber of ID in the data
     Np : the number of discrete pose in the data
-    Nz : size of noise vector
+    Nz : size of noise vector (Default in the paper is 50)
     """
     Nd = []
     Np = []
