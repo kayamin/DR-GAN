@@ -44,4 +44,8 @@
   - batch size have to be divisible by images_perID
   > python main.py -multi-DRGAN -images-perID=4 -random
 
-3. 
+3. Generate Image with arbitrary pose
+  - use "-generate" option
+  - specify leaned model by "-snapshot" option
+  - generated images will be saved at specified sanpshot directory
+  > python main.py -random -multi-DRGAN -generate -images-perID=4 -snapshot=snapshot/2017-09-22_23-03-50/epoch5
