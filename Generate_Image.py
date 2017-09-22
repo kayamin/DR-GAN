@@ -29,6 +29,8 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
         D_model.cuda()
         G_model.cuda()
 
+    G_model.eval()
+
     image_size = images.shape[0]
     epoch_time = np.ceil(image_size / args.batch_size).astype(int)
     features = []
