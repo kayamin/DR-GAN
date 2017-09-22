@@ -16,10 +16,9 @@
 
 ### Single-Image DR-GAN
 1. modify DataLoader function at main.py to define dataloader which is applicable to your data
-        - data needs to have ID and pose lables corresponds to each image
-        - if you don't have, "-random" option allow you to see how the code works with meanless random data.
-        > python main.py -random
-
+    - data needs to have ID and pose lables corresponds to each image
+    - if you don't have, "-random" option allow you to see how the code works with meanless random data.
+    > python main.py -random
 
 2. Run main.py to train models
       - trained models and Loss_log will be saved at "./snapshot" by default
