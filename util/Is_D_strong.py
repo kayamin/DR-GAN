@@ -23,7 +23,6 @@ def Is_D_strong(real_output, syn_output, id_label_tensor, pose_label_tensor, syn
 
     # Variable(FloatTensor) -> Float へと変換
     total_precision = total_precision.data[0]
-    pdb.set_trace()
     if total_precision>=thresh:
         flag_D_strong = True
     else:

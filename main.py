@@ -104,7 +104,6 @@ if __name__=="__main__":
                 print("Please give valid combination of data_size, batch_size, images_perID")
                 exit()
     else:
-        pose_code = [] # specify arbitrary pose code for every image
-        # pose_code = np.random.uniform(-1,1, (images.shape[0], Np))
-
+        # pose_code = [] # specify arbitrary pose code for every image
+        pose_code = np.random.uniform(-1,1, (images.shape[0], Np))
         features = Generate_Image(images, pose_code, Nz, G, args)

@@ -34,37 +34,73 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
     features = []
     image_number = 1
 
-    for i in range(epoch_time):
-        start = i*args.batch_size
-        end = start + args.batch_size
-        batch_image = torch.FloatTensor(images[start:end])
-        batch_pose_code = torch.FloatTensor(pose_code[start:end]) # Condition 付に使用
-        minibatch_size = len(batch_image)
+    if not(args.multi_DRGAN):
 
-        fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
+        for i in range(epoch_time):
+            start = i*args.batch_size
+            end = start + args.batch_size
+            batch_image = torch.FloatTensor(images[start:end])
+            batch_pose_code = torch.FloatTensor(pose_code[start:end]) # Condition 付に使用
+            minibatch_size = len(batch_image)
 
-        if args.cuda:
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
+
+            if args.cuda:
+                batch_image, fixed_noise, batch_pose_code = \
+                    batch_image.cuda(), fixed_noise.cuda(), batch_pose_cod.cuda()
+
             batch_image, fixed_noise, batch_pose_code = \
-                batch_image.cuda(), fixed_noise.cuda(), batch_pose_cod.cuda()
+                Variable(batch_image), Variable(fixed_noise), Variable(batch_pose_code)
 
-        batch_image, fixed_noise, batch_pose_code = \
-            Variable(batch_image), Variable(fixed_noise), Variable(batch_pose_code)
+            # Generatorでイメージ生成
+            generated = G_model(batch_image, batch_pose_code, fixed_noise)
+            features.append(G_model.features)
 
-        # Generatorでイメージ生成
-        generated = G_model(batch_image, batch_pose_code, fixed_noise)
-        features.append(G_model.features)
+            # バッチ毎に生成したイメージを
+            for j in range(minibatch_size):
+                save_image = generated[j].cpu().data.numpy().transpose(1,2,0)*255.
+                save_dir = '{}_generated'.format(args.snapshot)
+                filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
+                if not os.path.isdir(save_dir): os.makedirs(save_dir)
+                print('saving {}'.format(filename))
+                misc.imsave(filename, save_image.astype(np.uint8))
 
-        # バッチ毎に生成したイメージを
-        for j in range(minibatch_size):
-            save_image = generated[j].cpu().data.numpy().transpose(1,2,0)*255.
-            save_dir = '{}_generated'.format(args.snapshot)
-            filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
-            if not os.path.isdir(save_dir): os.makedirs(save_dir)
-            print('saving {}'.format(filename))
-            misc.imsave(filename, save_image.astype(np.uint8))
+                image_number += 1
 
-            image_number += 1
+        features = torch.cat(features)
 
-    features = torch.cat(features)
+    else:
 
-    return features
+        for i in range(epoch_time):
+            start = i*args.batch_size
+            end = start + args.batch_size
+            batch_image = torch.FloatTensor(images[start:end])
+            batch_pose_code = torch.FloatTensor(pose_code[start:end]) # Condition 付に使用
+            batch_pose_code_unique = torch.FloatTensor(batch_pose_code[::args.images_perID])
+            minibatch_size_unique = len(batch_image) // args.images_perID
+
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
+
+            if args.cuda:
+                batch_image, fixed_noise, batch_pose_code_unique = \
+                    batch_image.cuda(), fixed_noise.cuda(), batch_pose_code_unique.cuda()
+
+            batch_image, fixed_noise, batch_pose_code_unique = \
+                Variable(batch_image), Variable(fixed_noise), Variable(batch_pose_code_unique)
+
+            # Generatorでイメージ生成
+            generated = G_model(batch_image, batch_pose_code_unique, fixed_noise)
+            features.append(G_model.features)
+
+            # バッチ毎に生成したイメージを
+            for j in range(minibatch_size_unique):
+                save_image = generated[j].cpu().data.numpy().transpose(1,2,0)*255.
+                save_dir = '{}_generated'.format(args.snapshot)
+                filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
+                if not os.path.isdir(save_dir): os.makedirs(save_dir)
+                print('saving {}'.format(filename))
+                misc.imsave(filename, save_image.astype(np.uint8))
+
+                image_number += 1
+
+        features = torch.cat(features)
