@@ -1,4 +1,5 @@
 # [Disentangled Representation Learning GAN for Pose-Invariant Face Recognition](http://cvlab.cse.msu.edu/project-dr-gan.html)
+# * Still under Development and haven't check the result of this implimentation (2017/9/25)
 
 - authors: Luan Tran, Xi Yin, Xiaoming Liu
 - CVPR2017: http://cvlab.cse.msu.edu/pdfs/Tran_Yin_Liu_CVPR2017.pdf
