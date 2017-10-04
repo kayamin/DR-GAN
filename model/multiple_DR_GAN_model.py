@@ -124,38 +124,29 @@ class Crop(nn.Module):
 
 
 
-class WSum_feature(nn.Module):
+def WSum_feature(x, n):
     """
     重みの出力の部分にだけシグモイド関数をかけ， その重みを用いて n枚の画像の出力結果を足し合わせる
     入力： nBx321x1x1　-> 出力: B x 320x1x1
 
-    ### init
     n : 一人にあたり何枚の画像をデータとして渡しているのか
 
     """
+    # CNN出力結果を特徴量と重みに分けた後に， 各人 n 枚毎のデータへ分割
+    features = x[:,:-1].split(n,0)
+    weights = x[:,-1].unsqueeze(1).sigmoid().split(n,0)
 
-    def __init__(self, n):
-        super().__init__()
+    features_summed = []
 
-        self.n = n
+    # nBx320x1x1 -> Bx320x1x1
+    for (feature_each, weight_each)  in zip(features, weights):
+        feature_weighted = feature_each*weight_each
+        feature_summed = feature_weighted.sum(0, keepdim=True) / weight_each.sum(0)
+        features_summed.append(feature_summed)
 
-    def forward(self, x):
+    features_summed = torch.cat(features_summed)
 
-        # CNN出力結果を特徴量と重みに分けた後に， 各人 n 枚毎のデータへ分割
-        features = x[:,:-1].split(self.n,0)
-        weights = x[:,-1].unsqueeze(1).sigmoid().split(self.n,0)
-
-        features_summed = []
-
-        # nBx320x1x1 -> Bx320x1x1
-        for (feature_each, weight_each)  in zip(features, weights):
-            feature_weighted = feature_each*weight_each
-            feature_summed = feature_weighted.sum(0, keepdim=True) / weight_each.sum(0)
-            features_summed.append(feature_summed)
-
-        features_summed = torch.cat(features_summed)
-
-        return features_summed
+    return features_summed
 
 
 
@@ -171,9 +162,10 @@ class Generator(nn.Module):
 
     """
 
-    def __init__(self, Np, Nz, channle_num,n):
+    def __init__(self, Np, Nz, channle_num, images_perID):
         super(Generator, self).__init__()
         self.features = []
+        self.images_perID = images_perID
 
         G_enc_convLayers = [
             nn.Conv2d(channle_num, 32, 3, 1, 1, bias=False), # nBxchx96x96 -> nBx32x96x96
@@ -226,8 +218,6 @@ class Generator(nn.Module):
             nn.ELU(),
             nn.AvgPool2d(6, stride=1), #  nBx321x6x6 -> nBx321x1x1
 
-            # 同一人物の画像の特徴量を重みを用いて足し合わせる
-            WSum_feature(n), # nBx321x1x1 -> Bx320x1x1
         ]
         self.G_enc_convLayers = nn.Sequential(*G_enc_convLayers)
 
@@ -296,21 +286,28 @@ class Generator(nn.Module):
 
 
 
-    def forward(self, input, pose, noise):
+    def forward(self, input, pose, noise, single=False):
 
-        x = self.G_enc_convLayers(input) # nBx1x96x96 -> Bx320x1x1
+        x = self.G_enc_convLayers(input) # nBx1x96x96 -> Bx321x1x1
+
+        if single:
+            # 足し合わせない場合
+            x = x[:,:-1,:,:] # nBx321x1x1 -> nBx320x1x1
+        else:
+            # 同一人物の画像の特徴量を重みを用いて足し合わせる
+            x = WSum_feature(x, self.images_perID) # nBx321x1x1 -> Bx320x1x1
 
         x = x.squeeze(2)
         x = x.squeeze(2)
 
         self.features = x
-        
-        x = torch.cat([x, pose, noise], 1)  # nBx320 -> nB x (320+Np+Nz)
 
-        x = self.G_dec_fc(x) # B x (320+Np+Nz) -> B x (320x6x6)
+        x = torch.cat([x, pose, noise], 1)  # B(nB)x320 -> B(nB) x (320+Np+Nz)
 
-        x = x.view(-1, 320, 6, 6) # B x (320x6x6) -> B x 320 x 6 x 6
+        x = self.G_dec_fc(x) # B(nB) x (320+Np+Nz) -> B(nB) x (320x6x6)
 
-        x = self.G_dec_convLayers(x) #  B x 320 x 6 x 6 -> Bx1x96x96
+        x = x.view(-1, 320, 6, 6) # B(nB) x (320x6x6) -> B(nB) x 320 x 6 x 6
+
+        x = self.G_dec_convLayers(x) #  B(nB) x 320 x 6 x 6 -> B(nB)x1x96x96
 
         return x

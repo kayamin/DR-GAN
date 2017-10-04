@@ -44,33 +44,54 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
             batch_id_label_unique = torch.LongTensor(batch_id_label[::args.images_perID])
 
             batch_pose_label = torch.LongTensor(pose_labels[start:end])
+            minibatch_size = len(batch_image)
             minibatch_size_unique = len(batch_image) // args.images_perID
-            syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size_unique).astype(int))
 
-            # ノイズと姿勢コードを生成
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
-            pose_code = np.zeros((minibatch_size_unique, Np))
-            tmp  = np.random.randint(Np, size=minibatch_size_unique)
+            # 特徴量をまとめが場合とそれぞれ用いた場合の ノイズと姿勢コードを生成
+            # それぞれ用いた場合
+            syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size).astype(int))
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
+            pose_code = np.zeros((minibatch_size, Np))
+            tmp  = np.random.randint(Np, size=minibatch_size)
             pose_code[:, tmp] = 1
             pose_code = torch.FloatTensor(pose_code) # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
+            # 同一人物の特徴量をまとめた場合
+            syn_id_label_unique = torch.LongTensor(Nd*np.ones(minibatch_size_unique).astype(int))
+            fixed_noise_unique = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
+            pose_code_unique = np.zeros((minibatch_size_unique, Np))
+            tmp  = np.random.randint(Np, size=minibatch_size_unique)
+            pose_code_unique[:, tmp] = 1
+            pose_code_unique = torch.FloatTensor(pose_code_unique) # Condition 付に使用
+            pose_code_label_unique = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
 
             if args.cuda:
-                batch_image, batch_id_label, batch_id_label_unique, batch_pose_label, syn_id_label = \
-                    batch_image.cuda(), batch_id_label.cuda(), batch_id_label_unique.cuda(), batch_pose_label.cuda(), syn_id_label.cuda()
-
+                batch_image, batch_id_label, batch_pose_label, syn_id_label, \
                 fixed_noise, pose_code, pose_code_label = \
+                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), syn_id_label.cuda(), \
                     fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda()
 
-            batch_image, batch_id_label, batch_id_label_unique, batch_pose_label, syn_id_label = \
-                Variable(batch_image), Variable(batch_id_label), Variable(batch_id_label_unique), Variable(batch_pose_label), Variable(syn_id_label)
+                batch_id_label_unique, syn_id_label_unique, \
+                fixed_noise_unique, pose_code_unique, pose_code_label_unique = \
+                    batch_id_label_unique.cuda(), syn_id_label_unique.cuda(), \
+                    fixed_noise_unique.cuda(), pose_code_unique.cuda(), pose_code_label_unique.cuda()
 
+            batch_image, batch_id_label, batch_pose_label, syn_id_label, \
             fixed_noise, pose_code, pose_code_label = \
+                Variable(batch_image), Variable(batch_id_label), Variable(batch_pose_label), Variable(syn_id_label), \
                 Variable(fixed_noise), Variable(pose_code), Variable(pose_code_label)
 
+            batch_id_label_unique, syn_id_label_unique, \
+            fixed_noise_unique, pose_code_unique, pose_code_label_unique = \
+                Variable(batch_id_label_unique), Variable(syn_id_label_unique), \
+                Variable(fixed_noise_unique), Variable(pose_code_unique), Variable(pose_code_label_unique)
+
             # Generatorでイメージ生成
-            generated = G_model(batch_image, pose_code, fixed_noise)
+            # 個々の画像特徴量からそれぞれ画像を生成した場合
+            generated = G_model(batch_image, pose_code, fixed_noise,single=True)
+            # 同一人物の画像特徴量を一つにまとめた場合
+            generated_unique = G_model(batch_image, pose_code_unique, fixed_noise_unique)
 
             steps += 1
 
@@ -96,11 +117,12 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
 
                 else:
                     # Generatorの学習
-                    syn_output=D_model(generated)
+                    syn_output = D_model(generated)
+                    syn_output_unique = D_model(generated_unique)
 
                     # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label_unique) +\
-                        loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) + loss_criterion(syn_output[:, Nd+1:], pose_code_label) +\
+                                loss_criterion(syn_output_unique[:, :Nd+1], batch_id_label_unique) + loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
 
                     optimizer_G.step()
                     print("EPOCH : {0}, step : {1}, G : {2}".format(epoch, steps, g_loss.data[0]))
@@ -126,11 +148,12 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
 
                 else:
                     # Generatorの学習
-                    syn_output=D_model(generated)
+                    syn_output = D_model(generated)
+                    syn_output_unique = D_model(generated_unique)
 
                     # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label_unique) +\
-                        loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) + loss_criterion(syn_output[:, Nd+1:], pose_code_label) +\
+                                loss_criterion(syn_output_unique[:, :Nd+1], batch_id_label_unique) + loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
 
                     optimizer_G.step()
                     print("EPOCH : {0}, step : {1}, G : {2}".format(epoch, steps, g_loss.data[0]))
