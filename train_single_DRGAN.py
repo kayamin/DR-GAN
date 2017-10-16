@@ -81,7 +81,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
 
                     # id についての出力とラベル, pose についての出力とラベル それぞれの交差エントロピー誤差を計算
-                    d_loss = loss_criterion(real_output[:, :Nd+1], batch_id_label) +\
+                    d_loss = loss_criterion(real_output[:, :Nd], batch_id_label[:Nd]) +\
                                             loss_criterion(real_output[:, Nd+1:], batch_pose_label) +\
                                             loss_criterion(syn_output[:, :Nd+1], syn_id_label)
 
