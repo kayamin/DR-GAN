@@ -61,7 +61,10 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     # update args and print
-    args.save_dir = os.path.join(args.save_dir, datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    if args.multi_DRGAN:
+        args.save_dir = os.path.join(args.save_dir, 'Multi',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+    else:
+        args.save_dir = os.path.join(args.save_dir, 'Single',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
     print("\nParameters:")
     for attr, value in sorted(args.__dict__.items()):

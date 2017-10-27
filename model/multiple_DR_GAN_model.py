@@ -134,12 +134,14 @@ def WSum_feature(x, n):
 
     """
     # nBx320x1x1 -> Bx320x1x1
+
+    B = x.size(0)//n
     weight = x[:,-1].unsqueeze(1).sigmoid()
     features = x*weight
     features = features[:,:-1].split(n, 0)
-    features = torch.cat(features,1)~
+    features = torch.cat(features,1)
     features_summed = features.sum(0, keepdim=True)
-    features_summed = features_summed.view(50,-1)
+    features_summed = features_summed.view(B,-1)
 
     return features_summed
 
@@ -284,15 +286,15 @@ class Generator(nn.Module):
 
         x = self.G_enc_convLayers(input) # nBx1x96x96 -> Bx321x1x1
 
+        x = x.squeeze(2)
+        x = x.squeeze(2)
+
         if single:
             # 足し合わせない場合
-            x = x[:,:-1,:,:] # nBx321x1x1 -> nBx320x1x1
+            x = x[:,:-1] # nBx321 -> nBx320
         else:
             # 同一人物の画像の特徴量を重みを用いて足し合わせる
-            x = WSum_feature(x, self.images_perID) # nBx321x1x1 -> Bx320x1x1
-
-        x = x.squeeze(2)
-        x = x.squeeze(2)
+            x = WSum_feature(x, self.images_perID) # nBx321 -> Bx320
 
         self.features = x
 
