@@ -109,7 +109,7 @@ class Crop(nn.Module):
     """
 
     def __init__(self, crop_list):
-        super().__init__()
+        super(Crop, self).__init__()
 
         # crop_lsit = [crop_top, crop_bottom, crop_left, crop_right]
         self.crop_list = crop_list

@@ -97,7 +97,7 @@ class Discriminator(nn.Module):
 
 ## nn.Module を継承しても， super でコンストラクタを呼び出さないと メンバ変数 self._modues が
 ## 定義されずに後の重み初期化の際にエラーを出す
-## sef._modules はモジュールが格納するモジュール名を格納しておくリスト
+## self._modules はモジュールが格納するモジュール名を格納しておくリスト
 
 class Crop(nn.Module):
 
@@ -111,7 +111,7 @@ class Crop(nn.Module):
     """
 
     def __init__(self, crop_list):
-        super().__init__()
+        super(Crop, self).__init__()
 
         # crop_lsit = [crop_top, crop_bottom, crop_left, crop_right]
         self.crop_list = crop_list
@@ -130,24 +130,18 @@ def WSum_feature(x, n):
     入力： nBx321x1x1　-> 出力: B x 320x1x1
 
     n : 一人にあたり何枚の画像をデータとして渡しているのか
+    B : バッチ毎に何人分(１人n枚)の画像をデータとして渡しているのか
 
     """
-    # CNN出力結果を特徴量と重みに分けた後に， 各人 n 枚毎のデータへ分割
-    features = x[:,:-1].split(n,0)
-    weights = x[:,-1].unsqueeze(1).sigmoid().split(n,0)
-
-    features_summed = []
-
     # nBx320x1x1 -> Bx320x1x1
-    for (feature_each, weight_each)  in zip(features, weights):
-        feature_weighted = feature_each*weight_each
-        feature_summed = feature_weighted.sum(0, keepdim=True) / weight_each.sum(0)
-        features_summed.append(feature_summed)
-
-    features_summed = torch.cat(features_summed)
+    weight = x[:,-1].unsqueeze(1).sigmoid()
+    features = x*weight
+    features = features[:,:-1].split(n, 0)
+    features = torch.cat(features,1)~
+    features_summed = features.sum(0, keepdim=True)
+    features_summed = features_summed.view(50,-1)
 
     return features_summed
-
 
 
 class Generator(nn.Module):
