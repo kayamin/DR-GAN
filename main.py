@@ -17,7 +17,7 @@ from Generate_Image import Generate_Image
 import pdb
 
 
-def DataLoader():
+def DataLoader(data_place):
     """
     Define dataloder which is applicable to your data
 
@@ -29,13 +29,23 @@ def DataLoader():
     Np : the number of discrete pose in the data
     Nz : size of noise vector (Default in the paper is 50)
     """
-    Nd = []
-    Np = []
-    Nz = []
-    channel_num = []
-    images = []
-    id_labels = []
-    pose_labels = []
+    # Nd = []
+    # Np = []
+    # Nz = []
+    # channel_num = []
+    # images = []
+    # id_labels = []
+    # pose_labels = []
+
+    # mycase
+    Nz = 50
+    channel_num = 3
+    images = np.load(open(data_place + “/images.npy”))
+    id_labels = np.load(open(data_place + “/ids.npy”))
+    pose_labels = np.load(open(data_place + “/yaws.npy”))
+
+    Np = pose_labels.max() + 1
+    Nd = id_labels.max() + 1
 
     return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
 
@@ -45,12 +55,13 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='DR_GAN')
     # learning
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
-    parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 256]')
-    parser.add_argument('-batch_size', type=int, default=8, help='batch size for training [default: 64]')
+    parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 1000]')
+    parser.add_argument('-batch_size', type=int, default=8, help='batch size for training [default: 8]')
     parser.add_argument('-save-dir', type=str, default='snapshot', help='where to save the snapshot')
     parser.add_argument('-save-freq', type=int, default=1, help='save learned model for every "-save-freq" epoch')
     # data
-    parser.add_argument('-random', action='store_true', default=False, help='shuffle the data every epoch')
+    parser.add_argument('-random', action='store_true', default=False, help='use randomely created data to run program')
+    parser.add_argument('-data-place', type=str, default='./data', help='prepared data path to run program')
     # model
     parser.add_argument('-multi-DRGAN', action='store_true', default=False, help='use multi image DR_GAN model')
     parser.add_argument('-images-perID', type=int, default=0, help='number of images per person to input to multi image DR_GAN')
@@ -81,7 +92,12 @@ if __name__=="__main__":
     if args.random:
         images, id_labels, pose_labels, Nd, Np, Nz, channel_num = create_randomdata()
     else:
-        images, id_labels, pose_labels, Nd, Np, Nz, channel_num = DataLoader()
+        print('n\Loading data from [%s]...' % args.data_place)
+        try:
+            images, id_labels, pose_labels, Nd, Np, Nz, channel_num = DataLoader(args.data_place)
+        except:
+            print("Sorry, failed to load data")
+
 
     # model
     if args.snapshot is None:
