@@ -5,6 +5,8 @@ import os
 import numpy as np
 from scipy import misc
 import pdb
+import matplotlib as mpl
+mpl.use('Agg')
 import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
