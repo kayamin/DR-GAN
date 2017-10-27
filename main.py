@@ -40,9 +40,9 @@ def DataLoader(data_place):
     # mycase
     Nz = 50
     channel_num = 3
-    images = np.load(open(data_place + “/images.npy”))
-    id_labels = np.load(open(data_place + “/ids.npy”))
-    pose_labels = np.load(open(data_place + “/yaws.npy”))
+    images = np.load(data_place + “/images.npy”)
+    id_labels = np.load(data_place + “/ids.npy”)
+    pose_labels = np.load(data_place + “/yaws.npy”)
 
     Np = pose_labels.max() + 1
     Nd = id_labels.max() + 1
