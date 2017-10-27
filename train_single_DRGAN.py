@@ -3,12 +3,14 @@
 
 import os
 import numpy as np
+from scipy import misc
 import pdb
 import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
 from util.Is_D_strong import Is_D_strong
+
 
 
 def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
@@ -135,12 +137,20 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
         # エポック毎にロスの保存
         loss_log.append([epoch, d_loss.data[0], g_loss.data[0]])
-        # 各エポックで学習したモデルを保存
-        if not os.path.isdir(args.save_dir): os.makedirs(args.save_dir)
-        save_path_D = os.path.join(args.save_dir,'epoch{}_D.pt'.format(epoch))
-        torch.save(D_model, save_path_D)
-        save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
-        torch.save(G_model, save_path_G)
+
+        if epoch%args.save_freq == 0:
+            # 各エポックで学習したモデルを保存
+            if not os.path.isdir(args.save_dir): os.makedirs(args.save_dir)
+            save_path_D = os.path.join(args.save_dir,'epoch{}_D.pt'.format(epoch))
+            torch.save(D_model, save_path_D)
+            save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
+            torch.save(G_model, save_path_G)
+            # 最後のエポックの学習前に生成した画像を１枚保存（学習の確認用）
+            save_generated_image = generated[0].cpu().data.numpy().transpose(1, 2, 0) * 255.
+            save_generated_image = np.squeeze(save_generated_image)
+            save_path_image = os.path.join(args.save_dir, 'epoch{}_generatedimage.jpg'.format(epoch))
+            misc.imsave(save_path_image, save_generated_image.astype(np.uint8))
+
 
     # 学習終了後に，全エポックでのロスの変化を画像として保存
     loss_log = np.array(loss_log)

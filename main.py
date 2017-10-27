@@ -48,6 +48,7 @@ if __name__=="__main__":
     parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 256]')
     parser.add_argument('-batch_size', type=int, default=8, help='batch size for training [default: 64]')
     parser.add_argument('-save-dir', type=str, default='snapshot', help='where to save the snapshot')
+    parser.add_argument('-save-freq', type=int, default=1, help='save learned model for every "-save-freq" epoch')
     # data
     parser.add_argument('-random', action='store_true', default=False, help='shuffle the data every epoch')
     # model
@@ -66,9 +67,15 @@ if __name__=="__main__":
     else:
         args.save_dir = os.path.join(args.save_dir, 'Single',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
+    os.makedirs(args.save_dir)
+
     print("\nParameters:")
     for attr, value in sorted(args.__dict__.items()):
-        print("\t{}={}".format(attr.upper(), value))
+        text ="\t{}={}\n".format(attr.upper(), value)
+        print(text)
+        with open('{}/Parameters.txt'.format(args.save_dir),'a') as f:
+            f.write(text)
+
 
     # input data
     if args.random:
