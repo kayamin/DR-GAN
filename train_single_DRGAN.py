@@ -12,6 +12,7 @@ import torch
 from torch import nn, optim
 from torch.autograd import Variable
 from util.Is_D_strong import Is_D_strong
+from util.log_learning import log_learning
 
 
 
@@ -91,7 +92,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                     d_loss.backward()
                     optimizer_D.step()
-                    print("EPOCH : {0}, step : {1}, D : {2}".format(epoch, steps, d_loss.data[0]))
+                    log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
                     # Discriminator の強さを判別
                     flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
@@ -105,7 +106,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                         loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     optimizer_G.step()
-                    print("EPOCH : {0}, step : {1}, G : {2}".format(epoch, steps, g_loss.data[0]))
+                    log_learning(epoch, steps, 'G', g_loss.data[0], args)
 
             else:
 
@@ -121,7 +122,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                     d_loss.backward()
                     optimizer_D.step()
-                    print("EPOCH : {0}, step : {1}, D : {2}".format(epoch, steps, d_loss.data[0]))
+                    log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
                     # Discriminator の強さを判別
                     flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
@@ -135,7 +136,8 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                         loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     optimizer_G.step()
-                    print("EPOCH : {0}, step : {1}, G : {2}".format(epoch, steps, g_loss.data[0]))
+
+                    log_learning(epoch, steps, 'G', g_loss.data[0], args)
 
         # エポック毎にロスの保存
         loss_log.append([epoch, d_loss.data[0], g_loss.data[0]])
