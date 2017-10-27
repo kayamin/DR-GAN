@@ -42,11 +42,11 @@
       - Multi-Image DR-GAN assumes input data to have *N* images per person and in my code, they should be sequentially aligned. So change *N* depends on your data.
       - input data size have to be divisible by batch size
       - batch size have to be divisible by images_perID
-      - trained modles and Loss_log will be saved at "DR_GAN/snapshot/Single" by default
+      - trained modles and Loss_log will be saved at "DR_GAN/snapshot/Multi" by default
       > python main.py -multi-DRGAN -images-perID=4 -random
 
 3. Generate Image with arbitrary pose
       - use "-generate" option
       - specify leaned model by "-snapshot" option
       - generated images will be saved at specified sanpshot directory
-      > python main.py -random -multi-DRGAN -generate -images-perID=4 -snapshot=snapshot/2017-09-22_23-03-50/epoch5
+      > python main.py -random -multi-DRGAN -generate -images-perID=4 -snapshot=snapshot/Multi/2017-09-22_23-03-50/epoch5
