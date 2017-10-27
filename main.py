@@ -40,12 +40,12 @@ def DataLoader(data_place):
     # mycase
     Nz = 50
     channel_num = 3
-    images = np.load('{}/images.npy'.foamat(data_place))
-    id_labels = np.load('{}/ids.npy'.foamat(data_place))
-    pose_labels = np.load('{}/yaws.npy'.foamat(data_place))
+    images = np.load('{}/images.npy'.format(data_place))
+    id_labels = np.load('{}/ids.npy'.format(data_place))
+    pose_labels = np.load('{}/yaws.npy'.format(data_place))
 
-    Np = pose_labels.max() + 1
-    Nd = id_labels.max() + 1
+    Np = int(pose_labels.max() + 1)
+    Nd = int(id_labels.max() + 1)
 
     return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
 
@@ -56,7 +56,7 @@ if __name__=="__main__":
     # learning
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
     parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 1000]')
-    parser.add_argument('-batch_size', type=int, default=8, help='batch size for training [default: 8]')
+    parser.add_argument('-batch-size', type=int, default=8, help='batch size for training [default: 8]')
     parser.add_argument('-save-dir', type=str, default='snapshot', help='where to save the snapshot')
     parser.add_argument('-save-freq', type=int, default=1, help='save learned model for every "-save-freq" epoch')
     # data
