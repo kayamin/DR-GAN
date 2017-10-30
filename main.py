@@ -53,21 +53,21 @@ def DataLoader(data_place):
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='DR_GAN')
-    # learning
+    # learning & saving parameters
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
     parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 1000]')
     parser.add_argument('-batch-size', type=int, default=8, help='batch size for training [default: 8]')
     parser.add_argument('-save-dir', type=str, default='snapshot', help='where to save the snapshot')
     parser.add_argument('-save-freq', type=int, default=1, help='save learned model for every "-save-freq" epoch')
-    # data
+    parser.add_argument('-cuda', action='store_true', default=False, help='enable the gpu')
+    # data souce
     parser.add_argument('-random', action='store_true', default=False, help='use randomely created data to run program')
     parser.add_argument('-data-place', type=str, default='./data', help='prepared data path to run program')
     # model
     parser.add_argument('-multi-DRGAN', action='store_true', default=False, help='use multi image DR_GAN model')
     parser.add_argument('-images-perID', type=int, default=0, help='number of images per person to input to multi image DR_GAN')
-    parser.add_argument('-cuda', action='store_true', default=False, help='enable the gpu')
     # option
-    parser.add_argument('-snapshot', type=str, default=None, help='filename of model snapshot(snaphsot/{date}/{epoch}) [default: None]')
+    parser.add_argument('-snapshot', type=str, default=None, help='filename of model snapshot(snapshot/{Single or Multiple}/{date}/{epoch}) [default: None]')
     parser.add_argument('-generate', action='store_true', default=None, help='Generate pose modified image from given image')
 
     args = parser.parse_args()
@@ -80,7 +80,7 @@ if __name__=="__main__":
 
     os.makedirs(args.save_dir)
 
-    print("\nParameters:")
+    print("Parameters:")
     for attr, value in sorted(args.__dict__.items()):
         text ="\t{}={}\n".format(attr.upper(), value)
         print(text)

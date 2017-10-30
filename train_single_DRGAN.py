@@ -106,7 +106,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                         loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     optimizer_G.step()
-                    log_learning(epoch, steps, 'G', g_loss.data[0], args)
+
 
             else:
 
