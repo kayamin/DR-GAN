@@ -24,14 +24,15 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
     D_model.train()
     G_model.train()
 
-    lr_Adam = args.lr
-    # m_Adam = 0.5
+    lr_Adam    = args.lr
+    beta1_Adam = args.beta1
+    beta2_Adam = args.beta2
 
     image_size = images.shape[0]
     epoch_time = np.ceil(image_size / args.batch_size).astype(int)
 
-    optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam)
-    optimizer_G = optim.Adam(G_model.parameters(), lr = lr_Adam)
+    optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
+    optimizer_G = optim.Adam(G_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
     loss_criterion = nn.CrossEntropyLoss()
 
     loss_log = []

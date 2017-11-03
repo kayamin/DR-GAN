@@ -55,6 +55,8 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='DR_GAN')
     # learning & saving parameterss
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
+    parser.add_argument('-beta1', type=float, default=0.5, help='adam optimizer parameter [default: 0.5]')
+    parser.add_argument('-beta2', type=float, default=0.999, help='adam optimizer parameter [default: 0.999]')
     parser.add_argument('-epochs', type=int, default=1000, help='number of epochs for train [default: 1000]')
     parser.add_argument('-batch-size', type=int, default=8, help='batch size for training [default: 8]')
     parser.add_argument('-save-dir', type=str, default='snapshot', help='where to save the snapshot')
