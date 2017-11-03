@@ -85,10 +85,12 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     real_output = D_model(batch_image)
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
 
-                    # id についての出力とラベル, pose についての出力とラベル それぞれの交差エントロピー誤差を計算
-                    d_loss = loss_criterion(real_output[:, :Nd], batch_id_label[:Nd]) +\
-                                            loss_criterion(real_output[:, Nd+1:], batch_pose_label) +\
-                                            loss_criterion(syn_output[:, :Nd+1], syn_id_label)
+                    # id,真偽, pose それぞれのロスを計算
+                    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log() + (1 - syn_output[:, Nd].sigmoid()).log()) / minibatch_size
+                    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+
+                    d_loss = L_gan + L_id + L_pose
 
                     d_loss.backward()
                     optimizer_D.step()
@@ -101,12 +103,16 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     # Generatorの学習
                     syn_output=D_model(generated)
 
-                    # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) +\
-                        loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+                    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
+                    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()) / minibatch_size
+                    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
+                    g_loss = L_gan + L_id + L_pose
+
+                    g_loss.backward()
                     optimizer_G.step()
-
+                    log_learning(epoch, steps, 'G', g_loss.data[0], args)
 
             else:
 
@@ -114,11 +120,14 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     # Discriminator の学習
                     real_output = D_model(batch_image)
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
+                    #pdb.set_trace()
 
-                    # id についての出力とラベル, pose についての出力とラベル それぞれの交差エントロピー誤差を計算
-                    d_loss = loss_criterion(real_output[:, :Nd+1], batch_id_label) +\
-                                            loss_criterion(real_output[:, Nd+1:], batch_pose_label) +\
-                                            loss_criterion(syn_output[:, :Nd+1], syn_id_label)
+                    # id,真偽, pose それぞれのロスを計算
+                    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log() + (1 - syn_output[:, Nd].sigmoid()).log()) / minibatch_size
+                    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+
+                    d_loss = L_gan + L_id + L_pose
 
                     d_loss.backward()
                     optimizer_D.step()
@@ -131,12 +140,15 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     # Generatorの学習
                     syn_output=D_model(generated)
 
-                    # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) +\
-                        loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+                    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
+                    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()) / minibatch_size
+                    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
+                    g_loss = L_gan + L_id + L_pose
+
+                    g_loss.backward()
                     optimizer_G.step()
-
                     log_learning(epoch, steps, 'G', g_loss.data[0], args)
 
         # エポック毎にロスの保存
