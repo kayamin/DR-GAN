@@ -3,7 +3,7 @@
 
 - authors: Luan Tran, Xi Yin, Xiaoming Liu
 - CVPR2017: http://cvlab.cse.msu.edu/pdfs/Tran_Yin_Liu_CVPR2017.pdf
-- Pytorch implimentation of DR-GAN(updated version in "Representation Learning by Rotating Your Faces")
+- Pytorch implimentation of DR-GAN (updated version in "Representation Learning by Rotating Your Faces")
 - Powered by [DL HACKS](http://deeplearning.jp/hacks/)
 
 ## Requirements
