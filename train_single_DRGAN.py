@@ -88,7 +88,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                     # id,真偽, pose それぞれのロスを計算
                     L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
-                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log() + (1 - syn_output[:, Nd].sigmoid()).log()) / minibatch_size
+                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log()*-1 + (1 - syn_output[:, Nd].sigmoid()).log()*-1) / minibatch_size
                     L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
 
                     d_loss = L_gan + L_id + L_pose
@@ -106,7 +106,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                     # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
                     L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
-                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()) / minibatch_size
+                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()*-1) / minibatch_size
                     L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     g_loss = L_gan + L_id + L_pose
@@ -125,7 +125,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                     # id,真偽, pose それぞれのロスを計算
                     L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
-                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log() + (1 - syn_output[:, Nd].sigmoid()).log()) / minibatch_size
+                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log()*-1 + (1 - syn_output[:, Nd].sigmoid()).log()*-1) / minibatch_size
                     L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
 
                     d_loss = L_gan + L_id + L_pose
@@ -143,7 +143,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                     # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
                     L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
-                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()) / minibatch_size
+                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()*-1) / minibatch_size
                     L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
                     g_loss = L_gan + L_id + L_pose
