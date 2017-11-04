@@ -100,7 +100,6 @@ if __name__=="__main__":
         except:
             print("Sorry, failed to load data")
 
-
     # model
     if args.snapshot is None:
         if not(args.multi_DRGAN):

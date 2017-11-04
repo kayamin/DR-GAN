@@ -6,7 +6,7 @@ import torch
 from torch.autograd import Variable
 import pdb
 
-def Is_D_strong(real_output, syn_output, id_label_tensor, pose_label_tensor, syn_id_label_tensor, Nd, thresh=0.9):
+def Is_D_strong(real_output, syn_output, id_label_tensor, pose_label_tensor, Nd, thresh=0.9):
     """
     # Discriminator の正解率を算出し， 指定した以上の正解率であれば， 十分強いとみなす
 

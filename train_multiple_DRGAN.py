@@ -37,7 +37,6 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
 
     loss_log = []
     steps = 0
-
     flag_D_strong  = False
     for epoch in range(1,args.epochs+1):
         for i in range(epoch_time):
@@ -109,27 +108,37 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
                     real_output = D_model(batch_image)
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
 
-                    # id についての出力とラベル, pose についての出力とラベル それぞれの交差エントロピー誤差を計算
-                    d_loss = loss_criterion(real_output[:, :Nd+1], batch_id_label) +\
-                                            loss_criterion(real_output[:, Nd+1:], batch_pose_label) +\
-                                            loss_criterion(syn_output[:, :Nd+1], syn_id_label)
+                    # id,真偽, pose それぞれのロスを計算
+                    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log()*-1 + (1 - syn_output[:, Nd].sigmoid()).log()*-1) / minibatch_size
+                    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+
+                    d_loss = L_gan + L_id + L_pose
 
                     d_loss.backward()
                     optimizer_D.step()
                     log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
                     # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
+                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
 
                 else:
                     # Generatorの学習
                     syn_output = D_model(generated)
                     syn_output_unique = D_model(generated_unique)
 
-                    # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) + loss_criterion(syn_output[:, Nd+1:], pose_code_label) +\
-                                loss_criterion(syn_output_unique[:, :Nd+1], batch_id_label_unique) + loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
+                    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
+                    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()*-1) / minibatch_size
+                    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
+                    L_id_unique     = loss_criterion(syn_output_unique[:, :Nd], batch_id_label_unique)
+                    L_gan_unique    = Variable.sum(syn_output_unique[:, Nd].sigmoid().log()*-1) / minibatch_size_unique
+                    L_pose_unique   = loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
+
+                    g_loss = L_gan + L_id + L_pose + L_gan_unique + L_id_unique + L_pose_unique
+
+                    g_loss.backward()
                     optimizer_G.step()
                     log_learning(epoch, steps, 'G', g_loss.data[0], args)
 
@@ -140,27 +149,37 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
                     real_output = D_model(batch_image)
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
 
-                    # id についての出力とラベル, pose についての出力とラベル それぞれの交差エントロピー誤差を計算
-                    d_loss = loss_criterion(real_output[:, :Nd+1], batch_id_label) +\
-                                            loss_criterion(real_output[:, Nd+1:], batch_pose_label) +\
-                                            loss_criterion(syn_output[:, :Nd+1], syn_id_label)
+                    # id,真偽, pose それぞれのロスを計算
+                    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(real_output[:, Nd].sigmoid().log()*-1 + (1 - syn_output[:, Nd].sigmoid()).log()*-1) / minibatch_size
+                    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+
+                    d_loss = L_gan + L_id + L_pose
 
                     d_loss.backward()
                     optimizer_D.step()
                     log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
                     # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
+                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
 
                 else:
                     # Generatorの学習
                     syn_output = D_model(generated)
                     syn_output_unique = D_model(generated_unique)
 
-                    # id についての出力と元画像のラベル, poseについての出力と生成時に与えたposeコード それぞれの交差エントロピー誤差を計算
-                    g_loss = loss_criterion(syn_output[:, :Nd+1], batch_id_label) + loss_criterion(syn_output[:, Nd+1:], pose_code_label) +\
-                                loss_criterion(syn_output_unique[:, :Nd+1], batch_id_label_unique) + loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
+                    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
+                    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
+                    L_gan   = Variable.sum(syn_output[:, Nd].sigmoid().log()*-1) / minibatch_size
+                    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
+                    L_id_unique     = loss_criterion(syn_output_unique[:, :Nd], batch_id_label_unique)
+                    L_gan_unique    = Variable.sum(syn_output_unique[:, Nd].sigmoid().log()*-1) / minibatch_size_unique
+                    L_pose_unique   = loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
+
+                    g_loss = L_gan + L_id + L_pose + L_gan_unique + L_id_unique + L_pose_unique
+
+                    g_loss.backward()
                     optimizer_G.step()
                     log_learning(epoch, steps, 'G', g_loss.data[0], args)
 

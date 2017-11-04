@@ -49,7 +49,6 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             batch_id_label = torch.LongTensor(id_labels[start:end])
             batch_pose_label = torch.LongTensor(pose_labels[start:end])
             minibatch_size = len(batch_image)
-            syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size).astype(int))
 
             # ノイズと姿勢コードを生成
             fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
@@ -61,14 +60,14 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
 
             if args.cuda:
-                batch_image, batch_id_label, batch_pose_label, syn_id_label = \
-                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), syn_id_label.cuda()
+                batch_image, batch_id_label, batch_pose_label = \
+                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda()
 
                 fixed_noise, pose_code, pose_code_label = \
                     fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda()
 
-            batch_image, batch_id_label, batch_pose_label, syn_id_label = \
-                Variable(batch_image), Variable(batch_id_label), Variable(batch_pose_label), Variable(syn_id_label)
+            batch_image, batch_id_label, batch_pose_label = \
+                Variable(batch_image), Variable(batch_id_label), Variable(batch_pose_label)
 
             fixed_noise, pose_code, pose_code_label = \
                 Variable(fixed_noise), Variable(pose_code), Variable(pose_code_label)
@@ -98,7 +97,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
                     # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
+                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
 
                 else:
                     # Generatorの学習
@@ -135,7 +134,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
                     # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, syn_id_label, Nd)
+                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
 
                 else:
                     # Generatorの学習
