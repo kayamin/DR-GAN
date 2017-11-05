@@ -262,7 +262,7 @@ class Generator(nn.Module):
             nn.BatchNorm2d(32),
             nn.ELU(),
             nn.ConvTranspose2d(32, channle_num,  3,1,1, bias=False), # Bx32x96x96 -> Bxchx96x96
-            nn.ELU(),
+            nn.Tanh(),
         ]
 
         self.G_dec_convLayers = nn.Sequential(*G_dec_convLayers)
