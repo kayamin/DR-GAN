@@ -162,8 +162,10 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
             torch.save(G_model, save_path_G)
             # 最後のエポックの学習前に生成した画像を１枚保存（学習の確認用）
-            save_generated_image = generated[0].cpu().data.numpy().transpose(1, 2, 0) * 255.
+            save_generated_image = generated[0].cpu().data.numpy().transpose(1, 2, 0)
             save_generated_image = np.squeeze(save_generated_image)
+            save_generated_image = (save_generated_image+1)/2.0 * 255.
+            save_generated_image = save_generated_image[:,:,[2,1,0]] # convert from BGR to RGB
             save_path_image = os.path.join(args.save_dir, 'epoch{}_generatedimage.jpg'.format(epoch))
             misc.imsave(save_path_image, save_generated_image.astype(np.uint8))
 
