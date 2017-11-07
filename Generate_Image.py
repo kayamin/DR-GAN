@@ -62,12 +62,15 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
 
             # バッチ毎に生成したイメージを
             for j in range(minibatch_size):
-                save_image = generated[j].cpu().data.numpy().transpose(1,2,0)*255.
+                save_generated_image = generated[j].cpu().data.numpy().transpose(1, 2, 0)
+                save_generated_image = np.squeeze(save_generated_image)
+                save_generated_image = (save_generated_image+1)/2.0 * 255.
+                save_generated_image = save_generated_image[:,:,[2,1,0]] # convert from BGR to RGB
                 save_dir = '{}_generated'.format(args.snapshot)
                 filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
                 if not os.path.isdir(save_dir): os.makedirs(save_dir)
                 print('saving {}'.format(filename))
-                misc.imsave(filename, save_image.astype(np.uint8))
+                misc.imsave(filename, save_generated_image.astype(np.uint8))
 
                 image_number += 1
 
@@ -98,12 +101,15 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
 
             # バッチ毎に生成したイメージを
             for j in range(minibatch_size_unique):
-                save_image = generated[j].cpu().data.numpy().transpose(1,2,0)*255.
+                save_generated_image = generated[j].cpu().data.numpy().transpose(1, 2, 0)
+                save_generated_image = np.squeeze(save_generated_image)
+                save_generated_image = (save_generated_image+1)/2.0 * 255.
+                save_generated_image = save_generated_image[:,:,[2,1,0]] # convert from BGR to RGB
                 save_dir = '{}_generated'.format(args.snapshot)
                 filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
                 if not os.path.isdir(save_dir): os.makedirs(save_dir)
                 print('saving {}'.format(filename))
-                misc.imsave(filename, save_image.astype(np.uint8))
+                misc.imsave(filename, save_generated_image.astype(np.uint8))
 
                 image_number += 1
 
