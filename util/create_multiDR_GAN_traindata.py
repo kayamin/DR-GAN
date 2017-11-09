@@ -6,6 +6,7 @@ import numpy as np
 import random
 import matplotlib as mpl
 mpl.use('Agg')
+import matplotlib.pyplot as plt
 
 def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
     """
