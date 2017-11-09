@@ -125,10 +125,10 @@ if __name__=="__main__":
         if not(args.multi_DRGAN):
             train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
         else:
-            if (images.shape[0] % args.batch_size == 0) and (args.batch_size % args.images_perID == 0):
+            if args.batch_size % args.images_perID == 0:
                 train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
             else:
-                print("Please give valid combination of data_size, batch_size, images_perID")
+                print("Please give valid combination of batch_size, images_perID")
                 exit()
     else:
         # pose_code = [] # specify arbitrary pose code for every image
