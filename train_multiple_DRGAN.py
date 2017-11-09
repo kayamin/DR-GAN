@@ -53,7 +53,7 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
             minibatch_size = len(batch_image)
             minibatch_size_unique = len(batch_image) // args.images_perID
 
-            # 特徴量をまとめが場合とそれぞれ用いた場合の ノイズと姿勢コードを生成
+            # 特徴量をまとめた場合とそれぞれ用いた場合の ノイズと姿勢コードを生成
             # それぞれ用いた場合
             syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size).astype(int))
             fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
