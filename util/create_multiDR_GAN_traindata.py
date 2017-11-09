@@ -51,4 +51,4 @@ def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
 
         k = k+n
 
-    return [images_train, id_labels_train, pose_labels_train]
+    return [images_train, id_labels_train.astype('int'), pose_labels_train.astype('int')]
