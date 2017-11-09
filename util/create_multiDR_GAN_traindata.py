@@ -16,8 +16,7 @@ def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
     3. order each ID's data set block randomely and return them as a training data
     """
 
-    images_tmp = images.copy())
-    len(np.unique(id_labels))
+    images_tmp = images.copy()
     count = plt.hist(id_labels,np.max(id_labels))
 
     # 画像がn枚以上ある個人にのみ学習対象を絞る
