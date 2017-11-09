@@ -39,7 +39,8 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
     flag_D_strong  = False
     for epoch in range(1,args.epochs+1):
 
-        images, id_labels, pose_labels = create_multiDR_GAN_traindata(images_whole, id_labels_whole, pose_labels_whole)
+        images, id_labels, pose_labels = create_multiDR_GAN_traindata(images_whole,\
+                                                    id_labels_whole, pose_labels_whole, args)
         image_size = images.shape[0]
         epoch_time = np.ceil(image_size / args.batch_size).astype(int)
 
