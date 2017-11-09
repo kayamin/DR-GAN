@@ -16,7 +16,7 @@ def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
     2. sample args.images_perID images for each ID randomely
     3. order each ID's data set block randomely and return them as a training data
     """
-    
+
     count = plt.hist(id_labels,np.max(id_labels))
 
     # 画像がn枚以上ある個人にのみ学習対象を絞る
@@ -34,7 +34,7 @@ def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
 
     # ランダムな順番で各個人からn枚ずつ画像をサンプリング
     k = 0
-    for i in tqdm(random.sample(list(id_target), len(id_target))):
+    for i in random.sample(list(id_target), len(id_target)):
         images_ind = images_target[id_labels_target==i]
         id_labels_ind = id_labels_target[id_labels_target==i]
         pose_labels_ind = pose_labels_target[id_labels_target==i]
