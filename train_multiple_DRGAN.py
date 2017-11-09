@@ -13,10 +13,11 @@ from torch import nn, optim
 from torch.autograd import Variable
 from util.Is_D_strong import Is_D_strong
 from util.log_learning import log_learning
+from util.create_multiDR_GAN_traindata import create_multiDR_GAN_traindata
 
 
 
-def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
+def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, Np, Nz, D_model, G_model, args):
     if args.cuda:
         D_model.cuda()
         G_model.cuda()
@@ -29,9 +30,6 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
     beta2_Adam = args.beta2
     eps = 10**-300
 
-    image_size = images.shape[0]
-    epoch_time = np.ceil(image_size / args.batch_size).astype(int)
-
     optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
     optimizer_G = optim.Adam(G_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
     loss_criterion = nn.CrossEntropyLoss()
@@ -40,6 +38,11 @@ def train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_
     steps = 0
     flag_D_strong  = False
     for epoch in range(1,args.epochs+1):
+
+        images, id_labels, pose_labels = create_multiDR_GAN_traindata(images_whole, id_labels_whole, pose_labels_whole)
+        image_size = images.shape[0]
+        epoch_time = np.ceil(image_size / args.batch_size).astype(int)
+
         for i in range(epoch_time):
             D_model.zero_grad()
             G_model.zero_grad()

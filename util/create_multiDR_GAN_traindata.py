@@ -8,6 +8,13 @@ import matplotlib as mpl
 mpl.use('Agg')
 
 def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
+    """
+    Create data set for multi-image DR-GAN
+
+    1. remove IDs which has images less than args.images_perID
+    2. sample args.images_perID images for each ID randomely
+    3. order each ID's data set block randomely and return them as a training data
+    """
 
     images_tmp = images.copy())
     len(np.unique(id_labels))
