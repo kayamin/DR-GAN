@@ -54,17 +54,17 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             D_model.zero_grad()
             G_model.zero_grad()
 
-            batch_image = torch.DoubleTensor(batch_data[0])
+            batch_image = torch.FloatTensor(batch_data[0].float())
             batch_id_label = batch_data[1]
             batch_pose_label = batch_data[2]
             minibatch_size = len(batch_image)
 
             # ノイズと姿勢コードを生成
-            fixed_noise = torch.DoubleTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
             pose_code = np.zeros((minibatch_size, Np))
             tmp  = np.random.randint(Np, size=minibatch_size)
             pose_code[:, tmp] = 1
-            pose_code = torch.DoubleTensor(pose_code) # Condition 付に使用
+            pose_code = torch.FloatTensor(pose_code) # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
 
