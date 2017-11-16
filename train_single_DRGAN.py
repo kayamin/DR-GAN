@@ -11,8 +11,11 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
+from torch.utils.data import DataLoader
+from torchvision import transforms
 from util.Is_D_strong import Is_D_strong
 from util.log_learning import log_learning
+from util.DataAugmentation import FaceIdPoseDataset, Resize, RandomCrop
 
 
 
@@ -41,22 +44,27 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
     flag_D_strong  = False
     for epoch in range(1,args.epochs+1):
-        for i in range(epoch_time):
+
+        # Load augmented data
+        transformed_dataset = FaceIdPoseDataset(images, id_labels, pose_labels,
+                                        transform = transforms.Compose([Resize((110,110)), RandomCrop((96,96))]))
+        dataloader = DataLoader(transformed_dataset, batch_size = args.batch_size, shuffle=True)
+
+        for i, batch_data in enumerate(dataloader):
             D_model.zero_grad()
             G_model.zero_grad()
-            start = i*args.batch_size
-            end = start + args.batch_size
-            batch_image = torch.FloatTensor(images[start:end])
-            batch_id_label = torch.LongTensor(id_labels[start:end])
-            batch_pose_label = torch.LongTensor(pose_labels[start:end])
+
+            batch_image = torch.DoubleTensor(batch_data[0])
+            batch_id_label = batch_data[1]
+            batch_pose_label = batch_data[2]
             minibatch_size = len(batch_image)
 
             # ノイズと姿勢コードを生成
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
+            fixed_noise = torch.DoubleTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
             pose_code = np.zeros((minibatch_size, Np))
             tmp  = np.random.randint(Np, size=minibatch_size)
             pose_code[:, tmp] = 1
-            pose_code = torch.FloatTensor(pose_code) # Condition 付に使用
+            pose_code = torch.DoubleTensor(pose_code) # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
 
