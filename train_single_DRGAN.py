@@ -55,8 +55,8 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             G_model.zero_grad()
 
             batch_image = torch.FloatTensor(batch_data[0].float())
-            batch_id_label = torch.LongTensor(batch_data[1].int())
-            batch_pose_label = torch.LongTensor(batch_data[2].int())
+            batch_id_label = batch_data[1]
+            batch_pose_label = batch_data[2]
             minibatch_size = len(batch_image)
 
             # ノイズと姿勢コードを生成
