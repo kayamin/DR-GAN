@@ -129,7 +129,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     # Discriminator の学習
                     real_output = D_model(batch_image)
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
-                    #pdb.set_trace()
+              
 
                     # id,真偽, pose それぞれのロスを計算
                     L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
