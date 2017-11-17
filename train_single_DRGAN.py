@@ -55,8 +55,8 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             G_model.zero_grad()
 
             batch_image = torch.FloatTensor(batch_data[0].float())
-            batch_id_label = batch_data[1]
-            batch_pose_label = batch_data[2]
+            batch_id_label = batch_data[1].float()
+            batch_pose_label = batch_data[2].float()
             minibatch_size = len(batch_image)
 
             # ノイズと姿勢コードを生成
@@ -129,7 +129,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                     # Discriminator の学習
                     real_output = D_model(batch_image)
                     syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
-              
+
 
                     # id,真偽, pose それぞれのロスを計算
                     L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
