@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-def create_randomdata(data_size=64, channel_num=3, Nd=200, Np=9):
+def create_randomdata(data_size=300, channel_num=3, Nd=5, Np=9):
     """
     Create random data
 
@@ -18,7 +18,7 @@ def create_randomdata(data_size=64, channel_num=3, Nd=200, Np=9):
     Nz : size of noise vector
     """
     Nz = 50
-    images = np.random.randn(data_size, channel_num, 96,96)
+    images = np.random.randn(data_size, channel_num, 110,110)
     id_labels = np.random.randint(Nd, size=data_size)
     pose_labels = np.random.randint(Np, size=data_size)
 
