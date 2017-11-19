@@ -43,7 +43,7 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
                                                     id_labels_whole, pose_labels_whole, args)
         image_size = images.shape[0]
         epoch_time = np.ceil(image_size / args.batch_size).astype(int)
-
+        pdb.set_trace()
         for i in range(epoch_time):
             D_model.zero_grad()
             G_model.zero_grad()
