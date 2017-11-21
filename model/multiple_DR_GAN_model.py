@@ -83,12 +83,9 @@ class Discriminator(nn.Module):
 
     def forward(self, input):
         # 畳み込み -> 平均プーリングの結果 B x 320 x 1 x 1の出力を得る
-        pdb.set_trace()
         x = self.convLayers(input)
-        pdb.set_trace()
-        # バッチ数次元を消さないように１次元の次元を削除　
-        x = x.squeeze(2)
-        x = x.squeeze(2)
+
+        x = x.view(-1, 320)
 
         # 全結合
         x = self.fc(x) # Bx320 -> B x (Nd+1+Np)

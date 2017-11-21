@@ -16,6 +16,7 @@ from torchvision import transforms
 from util.one_hot import one_hot
 from util.Is_D_strong import Is_D_strong
 from util.log_learning import log_learning
+from util.convert_image import convert_image
 from util.DataAugmentation import FaceIdPoseDataset, Resize, RandomCrop
 
 
@@ -72,8 +73,8 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
 
             if args.cuda:
-                batch_image, batch_id_label, batch_pose_label = \
-                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda()
+                batch_image, batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label = \
+                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), batch_ones_label.cuda(), batch_zeros_label.cuda()
 
                 fixed_noise, pose_code, pose_code_label = \
                     fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda()
@@ -94,77 +95,25 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
                 if i%5 == 0:
                     # Discriminator の学習
-                    real_output = D_model(batch_image)
-                    syn_output = D_model(generated.detach()) # .detach() をすることで Generatorまでの逆伝播計算省略
-
-                    # id,真偽, pose それぞれのロスを計算
-                    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
-                    L_gan   = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
-                    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
-
-                    d_loss = L_gan + L_id + L_pose
-
-                    d_loss.backward()
-                    optimizer_D.step()
-                    log_learning(epoch, steps, 'D', d_loss.data[0], args)
-
-                    # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
+                    flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
+                                            batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args)
 
                 else:
                     # Generatorの学習
-                    syn_output=D_model(generated)
-
-                    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
-                    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
-                    L_gan   = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
-                    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
-
-                    g_loss = L_gan + L_id + L_pose
-
-                    g_loss.backward()
-                    optimizer_G.step()
-                    log_learning(epoch, steps, 'G', g_loss.data[0], args)
-
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated,\
+                            batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args)
             else:
 
                 if i%2==0:
                     # Discriminator の学習
-                    real_output = D_model(batch_image)
-                    syn_output = D_model(generated.detach()) # .detach() をすることでGeneratorのパラメータを更新しない
-
-
-                    # id,真偽, pose それぞれのロスを計算
-                    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
-                    L_gan   = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
-                    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
-
-                    d_loss = L_gan + L_id + L_pose
-
-                    d_loss.backward()
-                    optimizer_D.step()
-                    log_learning(epoch, steps, 'D', d_loss.data[0], args)
-
-                    # Discriminator の強さを判別
-                    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
+                    flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
+                                            batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args)
 
                 else:
                     # Generatorの学習
-                    syn_output=D_model(generated)
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
+                            batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args)
 
-                    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
-                    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
-                    L_gan   = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
-                    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
-
-                    g_loss = L_gan + L_id + L_pose
-
-                    g_loss.backward()
-                    optimizer_G.step()
-                    log_learning(epoch, steps, 'G', g_loss.data[0], args)
-
-        # エポック毎にロスの保存
-        loss_log.append([epoch, d_loss.data[0], g_loss.data[0]])
 
         if epoch%args.save_freq == 0:
             # 各エポックで学習したモデルを保存
@@ -174,20 +123,48 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
             torch.save(G_model, save_path_G)
             # 最後のエポックの学習前に生成した画像を１枚保存（学習の確認用）
-            save_generated_image = generated[0].cpu().data.numpy().transpose(1, 2, 0)
-            save_generated_image = np.squeeze(save_generated_image)
-            save_generated_image = (save_generated_image+1)/2.0 * 255.
-            save_generated_image = save_generated_image[:,:,[2,1,0]] # convert from BGR to RGB
+            save_generated_image = convert_image(generated[0].cpu().data.numpy())
             save_path_image = os.path.join(args.save_dir, 'epoch{}_generatedimage.jpg'.format(epoch))
             misc.imsave(save_path_image, save_generated_image.astype(np.uint8))
 
 
-    # 学習終了後に，全エポックでのロスの変化を画像として保存
-    loss_log = np.array(loss_log)
-    plt.plot(loss_log[:,1], label="Discriminative Loss")
-    plt.plot(loss_log[:,2], label="Generative Loss")
-    plt.legend(loc='upper right')
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    filename = os.path.join(args.save_dir, 'Loss_log.png')
-    plt.savefig(filename, bbox_inches='tight')
+
+def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
+            batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args):
+
+    real_output = D_model(batch_image)
+    syn_output = D_model(generated.detach()) # .detach() をすることで Generatorまでの逆伝播計算省略
+
+    # id,真偽, pose それぞれのロスを計算
+    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
+    L_gan   = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
+    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+
+    d_loss = L_gan + L_id + L_pose
+
+    d_loss.backward()
+    optimizer_D.step()
+    log_learning(epoch, steps, 'D', d_loss.data[0], args)
+
+    # Discriminator の強さを判別
+    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
+
+    return flag_D_strong
+
+
+
+def Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
+            batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args):
+
+    syn_output=D_model(generated)
+
+    # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
+    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
+    L_gan   = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
+    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+
+    g_loss = L_gan + L_id + L_pose
+
+    g_loss.backward()
+    optimizer_G.step()
+    log_learning(epoch, steps, 'G', g_loss.data[0], args)
