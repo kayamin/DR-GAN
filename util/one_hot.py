@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 import torch
-import pdb
 
 def one_hot(label,depth):
     ones = torch.sparse.torch.eye(depth)
