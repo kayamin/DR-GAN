@@ -253,11 +253,10 @@ class Generator(nn.Module):
 
 
     def forward(self, input, pose, noise):
-        
+
         x = self.G_enc_convLayers(input) # Bxchx96x96 -> Bx320x1x1
 
-        x = x.squeeze(2)
-        x = x.squeeze(2)
+        x = x.view(-1,320)
 
         self.features = x
 
