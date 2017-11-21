@@ -286,9 +286,8 @@ class Generator(nn.Module):
     def forward(self, input, pose, noise, single=False):
 
         x = self.G_enc_convLayers(input) # nBx1x96x96 -> Bx321x1x1
-        
-        x = x.squeeze(2)
-        x = x.squeeze(2)
+
+        x = x.view(-1, 321)
 
         if single:
             # 足し合わせない場合

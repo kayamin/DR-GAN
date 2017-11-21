@@ -13,8 +13,8 @@ from torch import nn, optim
 from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from util.Is_D_strong import Is_D_strong
 from util.one_hot import one_hot
+from util.Is_D_strong import Is_D_strong
 from util.log_learning import log_learning
 from util.DataAugmentation import FaceIdPoseDataset, Resize, RandomCrop
 

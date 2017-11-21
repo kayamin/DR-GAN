@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
+from util.one_hot import one_hot
 from util.Is_D_strong import Is_D_strong
 from util.log_learning import log_learning
 from util.create_multiDR_GAN_traindata import create_multiDR_GAN_traindata
@@ -61,18 +62,14 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
             # それぞれ用いた場合
             syn_id_label = torch.LongTensor(Nd*np.ones(minibatch_size).astype(int))
             fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
-            pose_code = np.zeros((minibatch_size, Np))
-            tmp  = np.random.randint(Np, size=minibatch_size)
-            pose_code[:, tmp] = 1
-            pose_code = torch.FloatTensor(pose_code) # Condition 付に使用
+            tmp  = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
+            pose_code = one_hot(tmp, Np) # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
             # 同一人物の特徴量をまとめた場合
             syn_id_label_unique = torch.LongTensor(Nd*np.ones(minibatch_size_unique).astype(int))
             fixed_noise_unique = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
-            pose_code_unique = np.zeros((minibatch_size_unique, Np))
-            tmp  = np.random.randint(Np, size=minibatch_size_unique)
-            pose_code_unique[:, tmp] = 1
-            pose_code_unique = torch.FloatTensor(pose_code_unique) # Condition 付に使用
+            tmp  = torch.LongTensor(np.random.randint(Np, size=minibatch_size_unique))
+            pose_code_unique = one_hot(tmp, Np) # Condition 付に使用
             pose_code_label_unique = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
 
