@@ -29,7 +29,6 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
     lr_Adam = args.lr
     beta1_Adam = args.beta1
     beta2_Adam = args.beta2
-    eps = 10**-300
 
     optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
     optimizer_G = optim.Adam(G_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
@@ -37,6 +36,7 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
 
     loss_log = []
     steps = 0
+
     flag_D_strong  = False
     for epoch in range(1,args.epochs+1):
 
