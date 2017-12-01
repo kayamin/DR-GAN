@@ -20,7 +20,6 @@ from util.convert_image import convert_image
 from util.DataAugmentation import FaceIdPoseDataset, Resize, RandomCrop
 
 
-
 def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
     if args.cuda:
         D_model.cuda()
@@ -29,28 +28,28 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
     D_model.train()
     G_model.train()
 
-    lr_Adam    = args.lr
+    lr_Adam = args.lr
     beta1_Adam = args.beta1
     beta2_Adam = args.beta2
 
     image_size = images.shape[0]
     epoch_time = np.ceil(image_size / args.batch_size).astype(int)
 
-    optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
-    optimizer_G = optim.Adam(G_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
+    optimizer_D = optim.Adam(D_model.parameters(), lr=lr_Adam, betas=(beta1_Adam, beta2_Adam))
+    optimizer_G = optim.Adam(G_model.parameters(), lr=lr_Adam, betas=(beta1_Adam, beta2_Adam))
     loss_criterion = nn.CrossEntropyLoss()
     loss_criterion_gan = nn.BCEWithLogitsLoss()
 
     loss_log = []
     steps = 0
 
-    flag_D_strong  = False
-    for epoch in range(1,args.epochs+1):
+    flag_D_strong = False
+    for epoch in range(1, args.epochs+1):
 
         # Load augmented data
         transformed_dataset = FaceIdPoseDataset(images, id_labels, pose_labels,
-                                        transform = transforms.Compose([Resize((110,110)), RandomCrop((96,96))]))
-        dataloader = DataLoader(transformed_dataset, batch_size = args.batch_size, shuffle=True)
+                                                transform=transforms.Compose([Resize((110, 110)), RandomCrop((96, 96))]))
+        dataloader = DataLoader(transformed_dataset, batch_size=args.batch_size, shuffle=True)
 
         for i, batch_data in enumerate(dataloader):
             D_model.zero_grad()
@@ -64,13 +63,11 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             batch_ones_label = torch.ones(minibatch_size)   # 真偽判別用のラベル
             batch_zeros_label = torch.zeros(minibatch_size)
 
-
             # ノイズと姿勢コードを生成
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
-            tmp  = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
-            pose_code = one_hot(tmp, Np) # Condition 付に使用
-            pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
-
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1, 1, (minibatch_size, Nz)))
+            tmp = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
+            pose_code = one_hot(tmp, Np)  # Condition 付に使用
+            pose_code_label = torch.LongTensor(tmp)  # CrossEntropy 誤差に使用
 
             if args.cuda:
                 batch_image, batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label = \
@@ -93,34 +90,34 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             # バッチ毎に交互に D と G の学習，　Dが90%以上の精度の場合は 1:4の比率で学習
             if flag_D_strong:
 
-                if i%5 == 0:
+                if i % 5 == 0:
                     # Discriminator の学習
                     flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
                                             batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args)
 
                 else:
                     # Generatorの学習
-                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated,\
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G, generated,\
                             batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args)
             else:
 
-                if i%2==0:
+                if i % 2 == 0:
                     # Discriminator の学習
                     flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
                                             batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args)
 
                 else:
                     # Generatorの学習
-                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G, generated, \
                             batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args)
 
-
-        if epoch%args.save_freq == 0:
+        if epoch % args.save_freq == 0:
             # 各エポックで学習したモデルを保存
-            if not os.path.isdir(args.save_dir): os.makedirs(args.save_dir)
-            save_path_D = os.path.join(args.save_dir,'epoch{}_D.pt'.format(epoch))
+            if not os.path.isdir(args.save_dir):
+                os.makedirs(args.save_dir)
+            save_path_D = os.path.join(args.save_dir, 'epoch{}_D.pt'.format(epoch))
             torch.save(D_model, save_path_D)
-            save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
+            save_path_G = os.path.join(args.save_dir, 'epoch{}_G.pt'.format(epoch))
             torch.save(G_model, save_path_G)
             # 最後のエポックの学習前に生成した画像を１枚保存（学習の確認用）
             save_generated_image = convert_image(generated[0].cpu().data.numpy())
@@ -133,12 +130,12 @@ def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_imag
             batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args):
 
     real_output = D_model(batch_image)
-    syn_output = D_model(generated.detach()) # .detach() をすることで Generatorまでの逆伝播計算省略
+    syn_output = D_model(generated.detach())  # .detach() をすることで Generatorまでの逆伝播計算省略
 
     # id,真偽, pose それぞれのロスを計算
-    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
-    L_gan   = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
-    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+    L_id = loss_criterion(real_output[:, :Nd], batch_id_label)
+    L_gan = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
+    L_pose = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
 
     d_loss = L_gan + L_id + L_pose
 
@@ -152,16 +149,15 @@ def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_imag
     return flag_D_strong
 
 
-
-def Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
+def Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G, generated, \
             batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args):
 
-    syn_output=D_model(generated)
+    syn_output = D_model(generated)
 
     # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
-    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
-    L_gan   = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
-    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+    L_id = loss_criterion(syn_output[:, :Nd], batch_id_label)
+    L_gan = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
+    L_pose = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
     g_loss = L_gan + L_id + L_pose
 

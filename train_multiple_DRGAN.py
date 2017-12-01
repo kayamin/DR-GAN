@@ -18,7 +18,6 @@ from util.convert_image import convert_image
 from util.create_multiDR_GAN_traindata import create_multiDR_GAN_traindata
 
 
-
 def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, Np, Nz, D_model, G_model, args):
     if args.cuda:
         D_model.cuda()
@@ -31,16 +30,16 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
     beta1_Adam = args.beta1
     beta2_Adam = args.beta2
 
-    optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
-    optimizer_G = optim.Adam(G_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
+    optimizer_D = optim.Adam(D_model.parameters(), lr=lr_Adam, betas=(beta1_Adam, beta2_Adam))
+    optimizer_G = optim.Adam(G_model.parameters(), lr=lr_Adam, betas=(beta1_Adam, beta2_Adam))
     loss_criterion = nn.CrossEntropyLoss()
     loss_criterion_gan = nn.BCEWithLogitsLoss()
 
     loss_log = []
     steps = 0
 
-    flag_D_strong  = False
-    for epoch in range(1,args.epochs+1):
+    flag_D_strong = False
+    for epoch in range(1, args.epochs+1):
 
         images, id_labels, pose_labels = create_multiDR_GAN_traindata(images_whole,\
                                                     id_labels_whole, pose_labels_whole, args)
@@ -65,13 +64,13 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
 
             # 特徴量をまとめた場合とそれぞれ用いた場合の ノイズと姿勢コードを生成
             # それぞれ用いた場合
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
-            tmp  = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
-            pose_code = one_hot(tmp, Np) # Condition 付に使用
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1, 1, (minibatch_size, Nz)))
+            tmp = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
+            pose_code = one_hot(tmp, Np)  # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
             # 同一人物の特徴量をまとめた場合
-            fixed_noise_unique = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
-            tmp  = torch.LongTensor(np.random.randint(Np, size=minibatch_size_unique))
+            fixed_noise_unique = torch.FloatTensor(np.random.uniform(-1, 1, (minibatch_size_unique, Nz)))
+            tmp = torch.LongTensor(np.random.randint(Np, size=minibatch_size_unique))
             pose_code_unique = one_hot(tmp, Np) # Condition 付に使用
             pose_code_label_unique = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
@@ -97,7 +96,7 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
 
             # Generatorでイメージ生成
             # 個々の画像特徴量からそれぞれ画像を生成した場合
-            generated = G_model(batch_image, pose_code, fixed_noise,single=True)
+            generated = G_model(batch_image, pose_code, fixed_noise, single=True)
             # 同一人物の画像特徴量を一つにまとめた場合
             generated_unique = G_model(batch_image, pose_code_unique, fixed_noise_unique)
 
@@ -113,8 +112,8 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
 
                 else:
                     # Generatorの学習
-                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, generated_unique, batch_id_label,\
-                                pose_code_label, batch_id_label_unique, pose_code_label_unique, batch_ones_label, minibatch_size_unique, epoch, steps, Nd, args)
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G, generated, generated_unique, batch_id_label,\
+                            pose_code_label, batch_id_label_unique, pose_code_label_unique, batch_ones_label, minibatch_size_unique, epoch, steps, Nd, args)
 
             else:
 
@@ -125,13 +124,13 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
 
                 else:
                     # Generatorの学習
-                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, generated_unique, batch_id_label,\
-                                pose_code_label, batch_id_label_unique, pose_code_label_unique, batch_ones_label, minibatch_size_unique, epoch, steps, Nd, args)
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G, generated, generated_unique, batch_id_label,\
+                            pose_code_label, batch_id_label_unique, pose_code_label_unique, batch_ones_label, minibatch_size_unique, epoch, steps, Nd, args)
 
-
-        if epoch%args.save_freq == 0:
+        if epoch % args.save_freq == 0:
             # 各エポックで学習したモデルを保存
-            if not os.path.isdir(args.save_dir): os.makedirs(args.save_dir)
+            if not os.path.isdir(args.save_dir):
+                os.makedirs(args.save_dir)
             save_path_D = os.path.join(args.save_dir,'epoch{}_D.pt'.format(epoch))
             torch.save(D_model, save_path_D)
             save_path_G = os.path.join(args.save_dir,'epoch{}_G.pt'.format(epoch))
@@ -142,7 +141,6 @@ def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, N
             misc.imsave(save_path_image, save_generated_image.astype(np.uint8))
 
 
-
 def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
             batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args):
 
@@ -150,9 +148,9 @@ def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_imag
     syn_output = D_model(generated.detach()) # .detach() をすることで Generatorまでの逆伝播計算省略
 
     # id,真偽, pose それぞれのロスを計算
-    L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
-    L_gan   = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
-    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+    L_id = loss_criterion(real_output[:, :Nd], batch_id_label)
+    L_gan = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
+    L_pose = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
 
     d_loss = L_gan + L_id + L_pose
 
@@ -166,21 +164,20 @@ def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_imag
     return flag_D_strong
 
 
-
-def Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, generated_unique, batch_id_label,\
+def Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G, generated, generated_unique, batch_id_label,\
             pose_code_label, batch_id_label_unique, pose_code_label_unique, batch_ones_label, minibatch_size_unique, epoch, steps, Nd, args):
 
     syn_output = D_model(generated)
     syn_output_unique = D_model(generated_unique)
 
     # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
-    L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
-    L_gan   = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
-    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+    L_id = loss_criterion(syn_output[:, :Nd], batch_id_label)
+    L_gan = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
+    L_pose = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
 
-    L_id_unique     = loss_criterion(syn_output_unique[:, :Nd], batch_id_label_unique)
-    L_gan_unique    = loss_criterion_gan(syn_output_unique[:, Nd], batch_ones_label[:minibatch_size_unique])
-    L_pose_unique   = loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
+    L_id_unique = loss_criterion(syn_output_unique[:, :Nd], batch_id_label_unique)
+    L_gan_unique = loss_criterion_gan(syn_output_unique[:, Nd], batch_ones_label[:minibatch_size_unique])
+    L_pose_unique = loss_criterion(syn_output_unique[:, Nd+1:], pose_code_label_unique)
 
     g_loss = L_gan + L_id + L_pose + L_gan_unique + L_id_unique + L_pose_unique
 

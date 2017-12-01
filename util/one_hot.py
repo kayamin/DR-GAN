@@ -3,6 +3,7 @@
 
 import torch
 
-def one_hot(label,depth):
+
+def one_hot(label, depth):
     ones = torch.sparse.torch.eye(depth)
-    return ones.index_select(0,label)
+    return ones.index_select(0, label)

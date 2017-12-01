@@ -9,6 +9,7 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import pdb
 
+
 def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
     """
     Create data set for multi-image DR-GAN
@@ -18,11 +19,11 @@ def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
     3. order each ID's data set block randomely and return them as a training data
     """
 
-    count = plt.hist(id_labels,np.max(id_labels))
+    count = plt.hist(id_labels, np.max(id_labels))
 
     # 画像がn枚以上ある個人にのみ学習対象を絞る
     n = args.images_perID
-    id_target = np.where(count[0]>n-1)[0]
+    id_target = np.where(count[0] > n-1)[0]
     image_No_target = [i for i, id in enumerate(id_labels) if id in id_target]
 
     images_target = images[image_No_target]
@@ -36,9 +37,9 @@ def create_multiDR_GAN_traindata(images, id_labels, pose_labels, args):
     # ランダムな順番で各個人からn枚ずつ画像をサンプリング
     k = 0
     for i in random.sample(list(id_target), len(id_target)):
-        images_ind = images_target[id_labels_target==i]
-        id_labels_ind = id_labels_target[id_labels_target==i]
-        pose_labels_ind = pose_labels_target[id_labels_target==i]
+        images_ind = images_target[id_labels_target == i]
+        id_labels_ind = id_labels_target[id_labels_target == i]
+        pose_labels_ind = pose_labels_target[id_labels_target == i]
 
         # 同一人物写真から n 枚サンプル
         sample = random.sample(range(images_ind.shape[0]), n)

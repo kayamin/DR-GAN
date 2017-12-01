@@ -12,6 +12,7 @@ import torch
 from torch import nn, optim
 from torch.autograd import Variable
 
+
 def Generate_Image(images, pose_code, Nz, G_model, args):
     """
     Generate_Image with learned Generator
@@ -44,10 +45,10 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
             start = i*args.batch_size
             end = start + args.batch_size
             batch_image = torch.FloatTensor(images[start:end])
-            batch_pose_code = torch.FloatTensor(pose_code[start:end]) # Condition 付に使用
+            batch_pose_code = torch.FloatTensor(pose_code[start:end])  # Condition 付に使用
             minibatch_size = len(batch_image)
 
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1, 1, (minibatch_size, Nz)))
 
             if args.cuda:
                 batch_image, fixed_noise, batch_pose_code = \
@@ -65,10 +66,11 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
                 save_generated_image = generated[j].cpu().data.numpy().transpose(1, 2, 0)
                 save_generated_image = np.squeeze(save_generated_image)
                 save_generated_image = (save_generated_image+1)/2.0 * 255.
-                save_generated_image = save_generated_image[:,:,[2,1,0]] # convert from BGR to RGB
+                save_generated_image = save_generated_image[:, :, [2, 1, 0]]  # convert from BGR to RGB
                 save_dir = '{}_generated'.format(args.snapshot)
                 filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
-                if not os.path.isdir(save_dir): os.makedirs(save_dir)
+                if not os.path.isdir(save_dir):
+                    os.makedirs(save_dir)
                 print('saving {}'.format(filename))
                 misc.imsave(filename, save_generated_image.astype(np.uint8))
 
@@ -82,11 +84,11 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
             start = i*args.batch_size
             end = start + args.batch_size
             batch_image = torch.FloatTensor(images[start:end])
-            batch_pose_code = torch.FloatTensor(pose_code[start:end]) # Condition 付に使用
+            batch_pose_code = torch.FloatTensor(pose_code[start:end])  # Condition 付に使用
             batch_pose_code_unique = torch.FloatTensor(batch_pose_code[::args.images_perID])
             minibatch_size_unique = len(batch_image) // args.images_perID
 
-            fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size_unique, Nz)))
+            fixed_noise = torch.FloatTensor(np.random.uniform(-1, 1, (minibatch_size_unique, Nz)))
 
             if args.cuda:
                 batch_image, fixed_noise, batch_pose_code_unique = \
@@ -104,10 +106,11 @@ def Generate_Image(images, pose_code, Nz, G_model, args):
                 save_generated_image = generated[j].cpu().data.numpy().transpose(1, 2, 0)
                 save_generated_image = np.squeeze(save_generated_image)
                 save_generated_image = (save_generated_image+1)/2.0 * 255.
-                save_generated_image = save_generated_image[:,:,[2,1,0]] # convert from BGR to RGB
+                save_generated_image = save_generated_image[:, :, [2, 1, 0]]  # convert from BGR to RGB
                 save_dir = '{}_generated'.format(args.snapshot)
                 filename = os.path.join(save_dir, '{}.jpg'.format(str(image_number)))
-                if not os.path.isdir(save_dir): os.makedirs(save_dir)
+                if not os.path.isdir(save_dir):
+                    os.makedirs(save_dir)
                 print('saving {}'.format(filename))
                 misc.imsave(filename, save_generated_image.astype(np.uint8))
 

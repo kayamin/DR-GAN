@@ -50,7 +50,7 @@ def DataLoader(data_place):
     return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='DR_GAN')
     # learning & saving parameterss
@@ -76,19 +76,18 @@ if __name__=="__main__":
 
     # update args and print
     if args.multi_DRGAN:
-        args.save_dir = os.path.join(args.save_dir, 'Multi',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        args.save_dir = os.path.join(args.save_dir, 'Multi', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
     else:
-        args.save_dir = os.path.join(args.save_dir, 'Single',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        args.save_dir = os.path.join(args.save_dir, 'Single', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
     os.makedirs(args.save_dir)
 
     print("Parameters:")
     for attr, value in sorted(args.__dict__.items()):
-        text ="\t{}={}\n".format(attr.upper(), value)
+        text = "\t{}={}\n".format(attr.upper(), value)
         print(text)
-        with open('{}/Parameters.txt'.format(args.save_dir),'a') as f:
+        with open('{}/Parameters.txt'.format(args.save_dir), 'a') as f:
             f.write(text)
-
 
     # input data
     if args.random:
@@ -106,7 +105,7 @@ if __name__=="__main__":
             D = single_model.Discriminator(Nd, Np, channel_num)
             G = single_model.Generator(Np, Nz, channel_num)
         else:
-            if args.images_perID==0:
+            if args.images_perID == 0:
                 print("Please specify -images-perID of your data to input to multi_DRGAN")
                 exit()
             else:
@@ -132,5 +131,5 @@ if __name__=="__main__":
                 exit()
     else:
         # pose_code = [] # specify arbitrary pose code for every image
-        pose_code = np.random.uniform(-1,1, (images.shape[0], Np))
+        pose_code = np.random.uniform(-1, 1, (images.shape[0], Np))
         features = Generate_Image(images, pose_code, Nz, G, args)
