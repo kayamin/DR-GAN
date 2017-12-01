@@ -20,9 +20,10 @@ import pdb
 def DataLoader(data_place):
     """
     Define dataloder which is applicable to your data
-
+    
     ### ouput
     images : 4 dimension tensor (the number of image x channel x image_height x image_width)
+             BGR [-1,1]
     id_labels : one-hot vector with Nd dimension
     pose_labels : one-hot vetor with Np dimension
     Nd : the nuber of ID in the data
