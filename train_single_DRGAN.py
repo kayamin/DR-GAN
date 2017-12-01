@@ -49,7 +49,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
         # Load augmented data
         transformed_dataset = FaceIdPoseDataset(images, id_labels, pose_labels,
-                                        transform = transforms.Compose([RandomCrop((96,96))]))
+                                        transform = transforms.Compose([Resize((110,110)), RandomCrop((96,96))]))
         dataloader = DataLoader(transformed_dataset, batch_size = args.batch_size, shuffle=True)
 
         for i, batch_data in enumerate(dataloader):
