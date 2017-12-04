@@ -14,10 +14,10 @@ from torch.autograd import Variable
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from util.one_hot import one_hot
-from util.Is_D_strong import Is_D_strong
+from util.check_balance import Is_D_strong
 from util.log_learning import log_learning
 from util.convert_image import convert_image
-from util.DataAugmentation import FaceIdPoseDataset, Resize, RandomCrop
+from util.data_augmentation import FaceIdPoseDataset, Resize, RandomCrop
 
 
 def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):

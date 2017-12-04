@@ -8,12 +8,12 @@ import numpy as np
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
-from model import single_DR_GAN_model as single_model
-from model import multiple_DR_GAN_model as multi_model
+from model import single_drgan as single_model
+from model import multiple_drgan as multi_model
 from util.create_randomdata import create_randomdata
-from train_single_DRGAN import train_single_DRGAN
-from train_multiple_DRGAN import train_multiple_DRGAN
-from Generate_Image import Generate_Image
+from train_single_drgan import train_single_DRGAN
+from train_multiple_drgan import train_multiple_DRGAN
+from generate_image import Generate_Image
 import pdb
 
 

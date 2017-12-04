@@ -12,10 +12,10 @@ import torch
 from torch import nn, optim
 from torch.autograd import Variable
 from util.one_hot import one_hot
-from util.Is_D_strong import Is_D_strong
+from util.check_balance import Is_D_strong
 from util.log_learning import log_learning
 from util.convert_image import convert_image
-from util.create_multiDR_GAN_traindata import create_multiDR_GAN_traindata
+from util.create_multidrgan_traindata import create_multiDR_GAN_traindata
 
 
 def train_multiple_DRGAN(images_whole, id_labels_whole, pose_labels_whole, Nd, Np, Nz, D_model, G_model, args):

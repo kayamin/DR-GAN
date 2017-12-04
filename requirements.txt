@@ -1,10 +1,17 @@
 cycler==0.10.0
+decorator==4.1.2
 matplotlib==2.0.0
+networkx==2.0
 numpy==1.13.1
+olefile==0.44
+Pillow==4.3.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.3
+PyWavelets==0.5.2
 PyYAML==3.12
+scikit-image==0.13.1
 scipy==0.18.1
 six==1.11.0
 torch==0.2.0.post3
+torchvision==0.1.9
