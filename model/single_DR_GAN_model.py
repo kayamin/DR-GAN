@@ -14,10 +14,11 @@ class Discriminator(nn.Module):
     ### init
     Nd : Number of identitiy to classify
     Np : Number of pose to classify
+    Ni : Number of illumination to classify
 
     """
 
-    def __init__(self, Nd, Np, channel_num):
+    def __init__(self, Nd, Np, Ni, channel_num):
         super(Discriminator, self).__init__()
         convLayers = [
             nn.Conv2d(channel_num, 32, 3, 1, 1, bias=False), # Bxchx96x96 -> Bx32x96x96
@@ -70,7 +71,7 @@ class Discriminator(nn.Module):
         ]
 
         self.convLayers = nn.Sequential(*convLayers)
-        self.fc = nn.Linear(320, Nd+1+Np)
+        self.fc = nn.Linear(320, Nd+1+Np+Ni)
 
         # 重みは全て N(0, 0.02) で初期化
         for m in self.modules():
@@ -87,7 +88,7 @@ class Discriminator(nn.Module):
         x = x.view(-1, 320)
 
         # 全結合
-        x = self.fc(x) # Bx320 -> B x (Nd+1+Np)
+        x = self.fc(x) # Bx320 -> B x (Nd+1+Np+Ni)
 
         return x
 
@@ -125,11 +126,13 @@ class Generator(nn.Module):
 
     ### init
     Np : Dimension of pose vector (Corresponds to number of dicrete pose classes of the data)
+    Ni : Dimension of illumination vector (Corresponds to number of dicrete illumination classes of the data)
     Nz : Dimension of noise vector
+
 
     """
 
-    def __init__(self, Np, Nz, channel_num):
+    def __init__(self, Np, Ni, Nz, channel_num):
         super(Generator, self).__init__()
         self.features = []
 
@@ -235,7 +238,7 @@ class Generator(nn.Module):
 
         self.G_dec_convLayers = nn.Sequential(*G_dec_convLayers)
 
-        self.G_dec_fc = nn.Linear(320+Np+Nz, 320*6*6)
+        self.G_dec_fc = nn.Linear(320+Np+Ni+Nz, 320*6*6)
 
         # 重みは全て N(0, 0.02) で初期化
         for m in self.modules():
@@ -250,7 +253,7 @@ class Generator(nn.Module):
 
 
 
-    def forward(self, input, pose, noise):
+    def forward(self, input, pose, illum ,noise):
 
         x = self.G_enc_convLayers(input) # Bxchx96x96 -> Bx320x1x1
 
@@ -258,9 +261,9 @@ class Generator(nn.Module):
 
         self.features = x
 
-        x = torch.cat([x, pose, noise], 1)  # Bx320 -> B x (320+Np+Nz)
+        x = torch.cat([x, pose, illum, noise], 1)  # Bx320 -> B x (320+Np+Ni+Nz)
 
-        x = self.G_dec_fc(x) # B x (320+Np+Nz) -> B x (320x6x6)
+        x = self.G_dec_fc(x) # B x (320+Np+Ni+Nz) -> B x (320x6x6)
 
         x = x.view(-1, 320, 6, 6) # B x (320x6x6) -> B x 320 x 6 x 6
 
