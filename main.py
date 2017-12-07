@@ -5,6 +5,7 @@ import os
 import argparse
 import datetime
 import numpy as np
+import pandas as pd
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
@@ -20,7 +21,7 @@ import pdb
 def DataLoader(data_place):
     """
     Define dataloder which is applicable to your data
-    
+
     ### ouput
     images : 4 dimension tensor (the number of image x channel x image_height x image_width)
              BGR [-1,1]
@@ -39,16 +40,27 @@ def DataLoader(data_place):
     # pose_labels = []
 
     # mycase
+    # Nz = 50
+    # channel_num = 3
+    # images = np.load('{}/images.npy'.format(data_place))
+    # id_labels = np.load('{}/ids.npy'.format(data_place))
+    # pose_labels = np.load('{}/yaws.npy'.format(data_place))
+    #
+    # Np = int(pose_labels.max() + 1)
+    # Nd = int(id_labels.max() + 1)
+    #
+    # return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
+
+    # mycase MultiPIE
     Nz = 50
-    channel_num = 3
-    images = np.load('{}/images.npy'.format(data_place))
-    id_labels = np.load('{}/ids.npy'.format(data_place))
-    pose_labels = np.load('{}/yaws.npy'.format(data_place))
+    channel_num = 30
+    image_attributes_df = pd.read_csv(data_place)
 
-    Np = int(pose_labels.max() + 1)
-    Nd = int(id_labels.max() + 1)
+    Nd = int(np.max(image_attributes_df['Id'])+1)
+    Np = int(np.max(image_attributes_df['pose'])+1)
+    Ni = int(np.max(image_attributes_df['illum'])+1)
 
-    return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
+    return [image_attributes_df, Nd, Np, Ni, Nz, channel_num]
 
 
 if __name__=="__main__":
