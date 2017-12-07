@@ -105,26 +105,27 @@ if __name__=="__main__":
 
     # input data
     if args.random:
-        images, id_labels, pose_labels, Nd, Np, Nz, channel_num = create_randomdata()
+        print('random data case is not implemented')
+        exit()
     else:
         print('n\Loading data from [%s]...' % args.data_place)
         try:
-            images, id_labels, pose_labels, Nd, Np, Nz, channel_num = DataLoader(args.data_place)
+            image_attributes_df, Nd, Np, Ni, Nz, channel_num = DataLoader(args.data_place)
         except:
             print("Sorry, failed to load data")
 
     # model
     if args.snapshot is None:
         if not(args.multi_DRGAN):
-            D = single_model.Discriminator(Nd, Np, channel_num)
-            G = single_model.Generator(Np, Nz, channel_num)
+            D = single_model.Discriminator(Nd, Np, Ni, channel_num)
+            G = single_model.Generator(Np, Ni, Nz, channel_num)
         else:
             if args.images_perID==0:
                 print("Please specify -images-perID of your data to input to multi_DRGAN")
                 exit()
             else:
-                D = multi_model.Discriminator(Nd, Np, channel_num)
-                G = multi_model.Generator(Np, Nz, channel_num, args.images_perID)
+                D = multi_model.Discriminator(Nd, Np, Ni, channel_num)
+                G = multi_model.Generator(Np, Ni, Nz, channel_num, args.images_perID)
     else:
         print('\nLoading model from [%s]...' % args.snapshot)
         try:
@@ -136,14 +137,14 @@ if __name__=="__main__":
 
     if not(args.generate):
         if not(args.multi_DRGAN):
-            train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
+            train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D, G, args)
         else:
             if args.batch_size % args.images_perID == 0:
-                train_multiple_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
+                train_multiple_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D, G, args)
             else:
                 print("Please give valid combination of batch_size, images_perID")
                 exit()
-    else:
-        # pose_code = [] # specify arbitrary pose code for every image
-        pose_code = np.random.uniform(-1,1, (images.shape[0], Np))
-        features = Generate_Image(images, pose_code, Nz, G, args)
+    # else:
+    #     # pose_code = [] # specify arbitrary pose code for every image
+    #     pose_code = np.random.uniform(-1,1, (images.shape[0], Np))
+    #     features = Generate_Image(images, pose_code, Nz, G, args)

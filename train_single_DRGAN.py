@@ -17,11 +17,11 @@ from util.one_hot import one_hot
 from util.Is_D_strong import Is_D_strong
 from util.log_learning import log_learning
 from util.convert_image import convert_image
-from util.DataAugmentation import FaceIdPoseDataset, Resize, RandomCrop
+from util.MultiPIE_DataLoader import MultiPIE_Dataset, FaceCrop, Resize, RandomCrop, RGBtoNormBGR
 
 
 
-def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_model, args):
+def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, args):
     if args.cuda:
         D_model.cuda()
         G_model.cuda()
@@ -33,7 +33,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
     beta1_Adam = args.beta1
     beta2_Adam = args.beta2
 
-    image_size = images.shape[0]
+    image_size = image_attributes_df.shape[0]
     epoch_time = np.ceil(image_size / args.batch_size).astype(int)
 
     optimizer_D = optim.Adam(D_model.parameters(), lr = lr_Adam, betas=(beta1_Adam, beta2_Adam))
@@ -48,8 +48,8 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
     for epoch in range(1,args.epochs+1):
 
         # Load augmented data
-        transformed_dataset = FaceIdPoseDataset(images, id_labels, pose_labels,
-                                        transform = transforms.Compose([Resize((110,110)), RandomCrop((96,96))]))
+        transformed_dataset = MultiPIE_Dataset(image_attributes_df, transforms = [FaceCrop(), Resize((110,110)), \
+                                                                            RandomCrop((96,96)), RGBtoNormBGR()])
         dataloader = DataLoader(transformed_dataset, batch_size = args.batch_size, shuffle=True)
 
         for i, batch_data in enumerate(dataloader):
@@ -59,34 +59,39 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
             batch_image = torch.FloatTensor(batch_data[0].float())
             batch_id_label = batch_data[1]
             batch_pose_label = batch_data[2]
+            batch_illum_label = batch_data[3]
             minibatch_size = len(batch_image)
 
             batch_ones_label = torch.ones(minibatch_size)   # 真偽判別用のラベル
             batch_zeros_label = torch.zeros(minibatch_size)
 
 
-            # ノイズと姿勢コードを生成
+            # ノイズと姿勢コード, 照明コードを生成
             fixed_noise = torch.FloatTensor(np.random.uniform(-1,1, (minibatch_size, Nz)))
-            tmp  = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
+            tmp = torch.LongTensor(np.random.randint(Np, size=minibatch_size))
             pose_code = one_hot(tmp, Np) # Condition 付に使用
             pose_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
 
+            tmp = torch.LongTensor(np.random.randint(Ni, size=minibatch_size))
+            illum_code = one_hot(tmp, Ni) # Condition 付に使用
+            illum_code_label = torch.LongTensor(tmp) # CrossEntropy 誤差に使用
+
 
             if args.cuda:
-                batch_image, batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label = \
-                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), batch_ones_label.cuda(), batch_zeros_label.cuda()
+                batch_image, batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label = \
+                    batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), batch_illum_label.cuda(), batch_ones_label.cuda(), batch_zeros_label.cuda()
 
-                fixed_noise, pose_code, pose_code_label = \
-                    fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda()
+                fixed_noise, pose_code, pose_code_label，illum_code, illum_code_label = \
+                    fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda(), illum_code.cuda(), illum_code_label.cuda*()
 
-            batch_image, batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label = \
-                Variable(batch_image), Variable(batch_id_label), Variable(batch_pose_label), Variable(batch_ones_label), Variable(batch_zeros_label)
+            batch_image, batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label = \
+                Variable(batch_image), Variable(batch_id_label), Variable(batch_pose_label), Variable(batch_illum_label), Variable(batch_ones_label), Variable(batch_zeros_label)
 
-            fixed_noise, pose_code, pose_code_label = \
-                Variable(fixed_noise), Variable(pose_code), Variable(pose_code_label)
+            fixed_noise, pose_code, pose_code_label, illum_code, illum_code_label = \
+                Variable(fixed_noise), Variable(pose_code), Variable(pose_code_label), Variable(illum_code), Variable(illum_code_label)
 
             # Generatorでイメージ生成
-            generated = G_model(batch_image, pose_code, fixed_noise)
+            generated = G_model(batch_image, pose_code, illum_code, fixed_noise)
 
             steps += 1
 
@@ -96,24 +101,23 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
                 if i%5 == 0:
                     # Discriminator の学習
                     flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
-                                            batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args)
-
-                else:
-                    # Generatorの学習
-                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated,\
-                            batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args)
-            else:
-
-                if i%2==0:
-                    # Discriminator の学習
-                    flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
-                                            batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args)
+                                            batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args)
 
                 else:
                     # Generatorの学習
                     Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
-                            batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args)
+                                batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args)
+            else:
 
+                if i%2==0:
+                    # Discriminator の学習
+                    Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
+                                batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args):
+
+                else:
+                    # Generatorの学習
+                    Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
+                                batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args)
 
         if epoch%args.save_freq == 0:
             # 各エポックで学習したモデルを保存
@@ -130,7 +134,7 @@ def train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D_model, G_mo
 
 
 def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
-            batch_id_label, batch_pose_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, args):
+            batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args):
 
     real_output = D_model(batch_image)
     syn_output = D_model(generated.detach()) # .detach() をすることで Generatorまでの逆伝播計算省略
@@ -138,32 +142,34 @@ def Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_imag
     # id,真偽, pose それぞれのロスを計算
     L_id    = loss_criterion(real_output[:, :Nd], batch_id_label)
     L_gan   = loss_criterion_gan(real_output[:, Nd], batch_ones_label) + loss_criterion_gan(syn_output[:, Nd], batch_zeros_label)
-    L_pose  = loss_criterion(real_output[:, Nd+1:], batch_pose_label)
+    L_pose  = loss_criterion(real_output[:, Nd+1:Nd+1+Np], batch_pose_label)
+    L_illum = loss_criterion(real_output[:, Nd+1+Np:], batch_illum_label)
 
-    d_loss = L_gan + L_id + L_pose
+    d_loss = L_gan + L_id + L_pose + L_illum
 
     d_loss.backward()
     optimizer_D.step()
     log_learning(epoch, steps, 'D', d_loss.data[0], args)
 
     # Discriminator の強さを判別
-    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, Nd)
+    flag_D_strong = Is_D_strong(real_output, syn_output, batch_id_label, batch_pose_label, batch_illum_label, Nd, Np)
 
     return flag_D_strong
 
 
 
 def Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
-            batch_id_label, batch_ones_label, pose_code_label, epoch, steps, Nd, args):
+            batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args):
 
     syn_output=D_model(generated)
 
     # id についての出力と元画像のラベル, 真偽, poseについての出力と生成時に与えたposeコード の ロスを計算
     L_id    = loss_criterion(syn_output[:, :Nd], batch_id_label)
     L_gan   = loss_criterion_gan(syn_output[:, Nd], batch_ones_label)
-    L_pose  = loss_criterion(syn_output[:, Nd+1:], pose_code_label)
+    L_pose  = loss_criterion(syn_output[:, Nd+1:Nd+1+Np], pose_code_label)
+    L_illum = loss_criterion(syn_output[:, Nd+1+Np:], illum_code_label)
 
-    g_loss = L_gan + L_id + L_pose
+    g_loss = L_gan + L_id + L_pose + L_illum
 
     g_loss.backward()
     optimizer_G.step()

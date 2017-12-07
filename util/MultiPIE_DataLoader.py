@@ -5,57 +5,14 @@ from torch.utils.data import DataLoader
 
 class MultiPIE_Dataset(Dataset):
 
-    def __init__(self, data_dir='/mnt/Multi-Pie/data/', transforms=None):
+    def __init__(self, image_attributes_df, transforms=None):
 
         # Create whole image path list
 
-        sess_list = np.sort(os.listdir(data_dir))
-        use_cam = ['01_0', '04_1', '05_0', '05_1', '08_0', '09_0', '11_0', '12_0', '13_0', '14_0', '19_0', '20_0', '24_0']
-        slide_param = [[80, 0], [10, 20], [20,0], [0,0], [-40, -20], [-120, 0], [-90, 0], [-50,0], [10,0], [-10, -20], [50, -20], [40, -20], [70, 30]]
-
-        yaw_order = [12, 0, 11, 10, 1, 2, 3, 9, 8, 4, 5, 7, 6]
-        use_cam_ordered = np.array(use_cam)[yaw_order]
-        slide_param_ordered = np.array(slide_param)[yaw_order]
-
-        margin = 150
-
-        whole_image_path = []
-        whole_image_Id = []
-        whole_image_pose = []
-        whole_image_illum = []
-
-        for sess in sess_list:
-            multi_dir = os.path.join(data_dir, sess, 'multiview')
-            indv_list = np.sort(os.listdir(multi_dir))
-
-            for indv in indv_list:
-                indv_dir = os.path.join(multi_dir, indv)
-                record_list = np.sort(os.listdir(indv_dir))
-
-                for record in record_list:
-                    record_dir = os.path.join(indv_dir, record)
-                    camera_list = use_cam_ordered
-
-                    for i in range(len(camera_list)):
-                        camera = camera_list[i]
-                        camera_dir = os.path.join(record_dir, camera)
-                        illum_list = np.sort(os.listdir(camera_dir))[-20:]
-
-                        for j in range(len(illum_list)):
-                            illum = illum_list[j]
-                            image_path = os.path.join(camera_dir, illum)
-
-                            whole_image_path.append(image_path)
-                            whole_image_Id.append(int(indv)-1)
-                            whole_image_pose.append(i)
-                            whole_image_illum.append(j)
-
-                    break # 無表情データのみ用いる（record1のみ）
-
-        self.whole_image_path = whole_image_path
-        self.whole_image_Id = whole_image_Id
-        self.whole_image_pose = whole_image_pose
-        self.whole_image_illum = whole_image_illum
+        self.whole_image_path = image_attributes_df['path'].values
+        self.whole_image_Id = image_attributes_df['Id'].values
+        self.whole_image_pose = image_attributes_df['pose'].values
+        self.whole_image_illum = image_attributes_df['illum'].values
         self.transforms = transforms
 
     def __len__(self):
@@ -66,9 +23,8 @@ class MultiPIE_Dataset(Dataset):
         Id = self.whole_image_Id[idx]
         pose = self.whole_image_pose[idx]
         illum = self.whole_image_illum[idx]
-
+        
         if self.transforms:
-
             for t in self.transforms:
                 image = t(image, pose)
 
@@ -81,7 +37,7 @@ class FaceCrop(object):
         yaw_order = [12, 0, 11, 10, 1, 2, 3, 9, 8, 4, 5, 7, 6]
 
         self.slide_param_ordered = slide_param_ordered = np.array(slide_param)[yaw_order]
-        self.margin = 150
+        self.margin = 160
 
     def __call__(self, image, pose):
 
