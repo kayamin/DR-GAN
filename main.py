@@ -53,7 +53,7 @@ def DataLoader(data_place):
 
     # mycase MultiPIE
     Nz = 50
-    channel_num = 30
+    channel_num = 3
     image_attributes_df = pd.read_csv(data_place)
 
     Nd = int(np.max(image_attributes_df['Id'])+1)
