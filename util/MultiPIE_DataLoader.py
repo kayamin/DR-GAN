@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import scipy as sp
+from skimage import io
 from torchvision import transforms
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
