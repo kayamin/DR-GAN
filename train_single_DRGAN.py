@@ -112,7 +112,7 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
                 if i%2==0:
                     # Discriminator の学習
                     Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
-                                batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args):
+                                batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args)
 
                 else:
                     # Generatorの学習
