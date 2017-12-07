@@ -1,3 +1,5 @@
+import numpy as np
+import pandas as pd
 import scipy as sp
 from torchvision import transforms
 from torch.utils.data import Dataset
@@ -23,7 +25,7 @@ class MultiPIE_Dataset(Dataset):
         Id = self.whole_image_Id[idx]
         pose = self.whole_image_pose[idx]
         illum = self.whole_image_illum[idx]
-        
+
         if self.transforms:
             for t in self.transforms:
                 image = t(image, pose)
