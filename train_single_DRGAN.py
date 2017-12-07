@@ -81,7 +81,7 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
                 batch_image, batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label = \
                     batch_image.cuda(), batch_id_label.cuda(), batch_pose_label.cuda(), batch_illum_label.cuda(), batch_ones_label.cuda(), batch_zeros_label.cuda()
 
-                fixed_noise, pose_code, pose_code_label，illum_code, illum_code_label = \
+                fixed_noise, pose_code, pose_code_label, illum_code, illum_code_label = \
                     fixed_noise.cuda(), pose_code.cuda(), pose_code_label.cuda(), illum_code.cuda(), illum_code_label.cuda*()
 
             batch_image, batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label = \
