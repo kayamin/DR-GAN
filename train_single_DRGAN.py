@@ -113,7 +113,7 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
                                 batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args)
                     G_cnt = G_cnt + 1
 
-                    if G_cnt > 4:
+                    if G_cnt == 4:
                         D_cnt = 0
                         G_cnt = 0
 
@@ -131,7 +131,7 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
                                 batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args)
                     G_cnt = G_cnt+1
 
-                    if G_cnt > 1:
+                    if G_cnt == 1:
                         D_cnt = 0
                         G_cnt = 0
 
