@@ -98,26 +98,24 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
             steps += 1
 
             # バッチ毎に交互に D と G の学習，　Dが90%以上の精度の場合は 1:4の比率で学習
-	    
+
             if flag_D_strong:
 
                 if D_cnt == 0:
                     # Discriminator の学習
                     flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
                                             batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args)
-
-		    D_cnt = D_cnt + 1
+                    D_cnt = D_cnt + 1
 
                 else:
                     # Generatorの学習
                     Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
                                 batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args)
-		    
-		    G_cnt = G_cnt + 1
+                    G_cnt = G_cnt + 1
 
-		    if G_cnt > 4:
-			D_cnt = 0
-			G_cnt = 0
+        		    if G_cnt > 4:
+        			D_cnt = 0
+        			G_cnt = 0
 
             else:
 
@@ -125,19 +123,17 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
                     # Discriminator の学習
                     flag_D_strong = Learn_D(D_model, loss_criterion, loss_criterion_gan, optimizer_D, batch_image, generated, \
                                 batch_id_label, batch_pose_label, batch_illum_label, batch_ones_label, batch_zeros_label, epoch, steps, Nd, Np, args)
-
-		    D_cnt = D_cnt + 1
+                    D_cnt = D_cnt + 1
 
                 else:
                     # Generatorの学習
                     Learn_G(D_model, loss_criterion, loss_criterion_gan, optimizer_G ,generated, \
                                 batch_id_label,batch_ones_label, pose_code_label, illum_code_label, epoch, steps, Nd, Np, args)
+                    G_cnt = G_cnt+1
 
-		    G_cnt = G_cnt+1
-
-		    if G_cnt > 1:
-			D_cnt = 0
-			G_cnt = 0
+        		    if G_cnt > 1:
+        			D_cnt = 0
+        			G_cnt = 0
 
         if epoch%args.save_freq == 0:
             # 各エポックで学習したモデルを保存
