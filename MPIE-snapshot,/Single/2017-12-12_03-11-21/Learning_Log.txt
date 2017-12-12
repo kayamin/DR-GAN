@@ -1,0 +1,15 @@
+EPOCH : 1, step : 1, D : 0.12592630088329315, precision : 0.9937499761581421
+EPOCH : 1, step : 2, G : 8.342473983764648, precision : None
+EPOCH : 1, step : 3, G : 8.501984596252441, precision : None
+EPOCH : 1, step : 4, G : 7.537023067474365, precision : None
+EPOCH : 1, step : 5, G : 7.043421268463135, precision : None
+EPOCH : 1, step : 6, D : 0.16673153638839722, precision : 0.98333340883255
+EPOCH : 1, step : 7, G : 7.288551330566406, precision : None
+EPOCH : 1, step : 8, G : 6.775504112243652, precision : None
+EPOCH : 1, step : 9, G : 6.7497992515563965, precision : None
+EPOCH : 1, step : 10, G : 5.8897833824157715, precision : None
+EPOCH : 1, step : 11, D : 0.2586115598678589, precision : 0.96875
+EPOCH : 1, step : 12, G : 6.017948627471924, precision : None
+EPOCH : 1, step : 13, G : 5.804634094238281, precision : None
+EPOCH : 1, step : 14, G : 5.524882793426514, precision : None
+EPOCH : 1, step : 15, G : 5.030821323394775, precision : None

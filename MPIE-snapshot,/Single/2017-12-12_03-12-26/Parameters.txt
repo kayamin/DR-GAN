@@ -1,0 +1,14 @@
+	BATCH_SIZE=96
+	BETA1=0.5
+	BETA2=0.999
+	CUDA=True
+	DATA_PLACE=/mnt/Multi-Pie/image_list/images_with_no_facial_expression_train.csv
+	EPOCHS=1000
+	GENERATE=None
+	IMAGES_PERID=0
+	LR=0.0002
+	MULTI_DRGAN=False
+	RANDOM=False
+	SAVE_DIR=MPIE-snapshot,/Single/2017-12-12_03-12-26
+	SAVE_FREQ=1
+	SNAPSHOT=MPIE-snapshot/Single/2017-12-07_10-54-24/epoch20
