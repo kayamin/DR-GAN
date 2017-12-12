@@ -133,7 +133,7 @@ def train_single_DRGAN(image_attributes_df, Nd, Np, Ni, Nz, D_model, G_model, ar
 
                     if G_cnt > 1:
                         D_cnt = 0
-            			G_cnt = 0
+                        G_cnt = 0
 
         if epoch%args.save_freq == 0:
             # 各エポックで学習したモデルを保存
