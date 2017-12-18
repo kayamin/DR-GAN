@@ -17,6 +17,7 @@ from generate_image import Generate_Image
 import pdb
 
 
+# TODO: Use pytorch's dataloader
 def DataLoader(data_place):
     """
     Define dataloder which is applicable to your data
@@ -50,8 +51,8 @@ def DataLoader(data_place):
     return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
 
 
+# TODO: Move to opts.py
 if __name__ == "__main__":
-
     parser = argparse.ArgumentParser(description='DR_GAN')
     # learning & saving parameterss
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
