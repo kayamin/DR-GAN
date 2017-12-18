@@ -8,15 +8,14 @@ import numpy as np
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
-from model import single_DR_GAN_model as single_model
-from model import multiple_DR_GAN_model as multi_model
+from model import model
 from util.create_randomdata import create_randomdata
-from train_single_DRGAN import train_single_DRGAN
-from train_multiple_DRGAN import train_multiple_DRGAN
-from Generate_Image import Generate_Image
+from train import train_single_DRGAN, train_multiple_DRGAN
+from generate_image import Generate_Image
 import pdb
 
 
+# TODO: Use pytorch's dataloader
 def DataLoader(data_place):
     """
     Define dataloder which is applicable to your data
@@ -51,8 +50,8 @@ def DataLoader(data_place):
     return [images, id_labels, pose_labels, Nd, Np, Nz, channel_num]
 
 
-if __name__=="__main__":
-
+# TODO: Move to opts.py
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='DR_GAN')
     # learning & saving parameterss
     parser.add_argument('-lr', type=float, default=0.0002, help='initial learning rate [default: 0.0002]')
@@ -77,19 +76,18 @@ if __name__=="__main__":
 
     # update args and print
     if args.multi_DRGAN:
-        args.save_dir = os.path.join(args.save_dir, 'Multi',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        args.save_dir = os.path.join(args.save_dir, 'Multi', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
     else:
-        args.save_dir = os.path.join(args.save_dir, 'Single',datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
+        args.save_dir = os.path.join(args.save_dir, 'Single', datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S'))
 
     os.makedirs(args.save_dir)
 
     print("Parameters:")
     for attr, value in sorted(args.__dict__.items()):
-        text ="\t{}={}\n".format(attr.upper(), value)
+        text = "\t{}={}\n".format(attr.upper(), value)
         print(text)
-        with open('{}/Parameters.txt'.format(args.save_dir),'a') as f:
+        with open('{}/Parameters.txt'.format(args.save_dir), 'a') as f:
             f.write(text)
-
 
     # input data
     if args.random:
@@ -103,16 +101,13 @@ if __name__=="__main__":
 
     # model
     if args.snapshot is None:
-        if not(args.multi_DRGAN):
-            D = single_model.Discriminator(Nd, Np, channel_num)
-            G = single_model.Generator(Np, Nz, channel_num)
-        else:
-            if args.images_perID==0:
+        if args.multi_DRGAN and args.images_perID == 0:
                 print("Please specify -images-perID of your data to input to multi_DRGAN")
                 exit()
-            else:
-                D = multi_model.Discriminator(Nd, Np, channel_num)
-                G = multi_model.Generator(Np, Nz, channel_num, args.images_perID)
+        else:
+            D = model.Discriminator(Nd, Np, channel_num)
+            G = model.Generator(Np, Nz, channel_num, args.multi_DRGAN, args.images_perID)
+
     else:
         print('\nLoading model from [%s]...' % args.snapshot)
         try:
@@ -122,7 +117,11 @@ if __name__=="__main__":
             print("Sorry, This snapshot doesn't exist.")
             exit()
 
-    if not(args.generate):
+    if args.generate:
+        # pose_code = [] # specify arbitrary pose code for every image
+        pose_code = np.random.uniform(-1, 1, (images.shape[0], Np))
+        features = Generate_Image(images, pose_code, Nz, G, args)
+    else:
         if not(args.multi_DRGAN):
             train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
         else:
@@ -131,7 +130,3 @@ if __name__=="__main__":
             else:
                 print("Please give valid combination of batch_size, images_perID")
                 exit()
-    else:
-        # pose_code = [] # specify arbitrary pose code for every image
-        pose_code = np.random.uniform(-1,1, (images.shape[0], Np))
-        features = Generate_Image(images, pose_code, Nz, G, args)
