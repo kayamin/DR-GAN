@@ -10,8 +10,7 @@ from torch import nn, optim
 from torch.autograd import Variable
 from model import model
 from util.create_randomdata import create_randomdata
-from train_single_drgan import train_single_DRGAN
-from train_multiple_drgan import train_multiple_DRGAN
+from train import train_single_DRGAN, train_multiple_DRGAN
 from generate_image import Generate_Image
 import pdb
 

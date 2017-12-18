@@ -120,13 +120,16 @@ class Generator(nn.Module):
                isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.02)
 
-    def forward(self, input, pose, noise):
+    def forward(self, input, pose, noise, single=False):
 
         x = self.G_enc_convLayers(input)  # Bxchx96x96 -> Bx320x1x1
 
         x = x.view(-1, self.Nf)
 
-        if self.multi_flag and self.images_perID:
+        # TODO: Refactoring
+        if self.multi_flag and single:
+            x = x[:, :-1]
+        elif self.multi_flag and self.images_perID:
             x = weight_sum_feature(x, self.images_perID)
 
         x = torch.cat([x, pose, noise], 1)  # Bx320 -> B x (320+Np+Nz)
