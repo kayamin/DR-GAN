@@ -194,7 +194,7 @@ def create_convs(channel_num, n_last=320):
         nn.Conv2d(32, 64, 3, 1, 1, bias=False),  # Bx32x96x96 -> Bx64x96x96
         nn.BatchNorm2d(64),
         nn.ELU(),
-        nn.ZeroPad2d((0, 1, 0, 1)),                      # Bx64x96x96 -> Bx64x97x97
+        nn.ZeroPad2d((0, 1, 0, 1)),  # Bx64x96x96 -> Bx64x97x97
         nn.Conv2d(64, 64, 3, 2, 0, bias=False),  # Bx64x97x97 -> Bx64x48x48
         nn.BatchNorm2d(64),
         nn.ELU(),
@@ -214,7 +214,7 @@ def create_convs(channel_num, n_last=320):
         nn.Conv2d(96, 192, 3, 1, 1, bias=False),  # Bx96x24x24 -> Bx192x24x24
         nn.BatchNorm2d(192),
         nn.ELU(),
-        nn.ZeroPad2d((0, 1, 0, 1)),                      # Bx192x24x24 -> Bx192x25x25
+        nn.ZeroPad2d((0, 1, 0, 1)),  # Bx192x24x24 -> Bx192x25x25
         nn.Conv2d(192, 192, 3, 2, 0, bias=False),  # Bx192x25x25 -> Bx192x12x12
         nn.BatchNorm2d(192),
         nn.ELU(),

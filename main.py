@@ -8,8 +8,7 @@ import numpy as np
 import torch
 from torch import nn, optim
 from torch.autograd import Variable
-from model import single_drgan as single_model
-from model import multiple_drgan as multi_model
+from model import model
 from util.create_randomdata import create_randomdata
 from train_single_drgan import train_single_DRGAN
 from train_multiple_drgan import train_multiple_DRGAN
@@ -102,16 +101,13 @@ if __name__ == "__main__":
 
     # model
     if args.snapshot is None:
-        if not(args.multi_DRGAN):
-            D = single_model.Discriminator(Nd, Np, channel_num)
-            G = single_model.Generator(Np, Nz, channel_num)
-        else:
-            if args.images_perID == 0:
+        if args.multi_DRGAN and args.images_perID == 0:
                 print("Please specify -images-perID of your data to input to multi_DRGAN")
                 exit()
-            else:
-                D = multi_model.Discriminator(Nd, Np, channel_num)
-                G = multi_model.Generator(Np, Nz, channel_num, args.images_perID)
+        else:
+            D = model.Discriminator(Nd, Np, channel_num)
+            G = model.Generator(Np, Nz, channel_num, args.multi_DRGAN, args.images_perID)
+
     else:
         print('\nLoading model from [%s]...' % args.snapshot)
         try:
@@ -121,7 +117,11 @@ if __name__ == "__main__":
             print("Sorry, This snapshot doesn't exist.")
             exit()
 
-    if not(args.generate):
+    if args.generate:
+        # pose_code = [] # specify arbitrary pose code for every image
+        pose_code = np.random.uniform(-1, 1, (images.shape[0], Np))
+        features = Generate_Image(images, pose_code, Nz, G, args)
+    else:
         if not(args.multi_DRGAN):
             train_single_DRGAN(images, id_labels, pose_labels, Nd, Np, Nz, D, G, args)
         else:
@@ -130,7 +130,3 @@ if __name__ == "__main__":
             else:
                 print("Please give valid combination of batch_size, images_perID")
                 exit()
-    else:
-        # pose_code = [] # specify arbitrary pose code for every image
-        pose_code = np.random.uniform(-1, 1, (images.shape[0], Np))
-        features = Generate_Image(images, pose_code, Nz, G, args)
